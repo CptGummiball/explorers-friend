@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "explorersfriend",
+  "version": "${version}",
+  "name": "The Explorer's Friend",
+  "description": "Lightweight, fully server-side browser world map. Automatically discovers block colors from the resources of all installed mods. Players do not need to install anything.",
+  "authors": [
+    "CaptainGummiball"
+  ],
+  "contact": {
+    "sources": "https://github.com/CptGummiball/explorers-friend",
+    "issues": "https://github.com/CptGummiball/explorers-friend/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/explorersfriend/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.explorersfriend.ExplorersFriend"
+    ]
+  },
+  "mixins": [
+    "explorersfriend.mixins.json"
+  ],
+  "accessWidener": "explorersfriend.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

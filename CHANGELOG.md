@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.3.0 — 2026-07-19
+
+### Added
+- **Multi-version support**: seven release artifacts now cover every stable Minecraft
+  release from 1.21.1 through 26.2 (1.21.1, 1.21.2–1.21.4, 1.21.5–1.21.8,
+  1.21.9–1.21.10, 1.21.11, 26.1–26.1.2, 26.2). Version families were derived by compiling identical adapter
+  source against every release and dedicated-server smoke tests — not guessed
+  (the 1.21.5 `setBlockState` mixin boundary is only visible at runtime). See docs/MULTIVERSION.md for the
+  download table, family boundaries and per-version claim-provider availability.
+- **26.x era port**: full port to unobfuscated Minecraft (official class names,
+  Java 25, loom no-remap pipeline, `official` access-widener namespace, the new
+  PermissionSet command system, three-argument CHUNK_LOAD event).
+- `dist/` release pipeline: `packageAllVersions` + `verifyAllArtifacts` produce all
+  jars with `checksums-sha256.txt`, `release-manifest.json` (honest per-artifact
+  "tested" flags fed by the smoke-test results) and `compatibility.json`.
+- Per-artifact dedicated-server smoke test harness (`scripts/smoke.py`).
+
+### Changed
+- Restructured into a Gradle multi-project: a Minecraft-free `common` core (renderer,
+  web server, caches, overlay models — bundled into every artifact) plus thin
+  per-family platform adapters under `platforms/`. No runtime version checks, no
+  reflection: version differences are resolved at compile time per module.
+- CI now builds the whole version matrix on JDK 21+25 and uploads all artifacts.
+
+### Notes
+- Block-color caches are keyed by jar-set hash; switching Minecraft versions triggers
+  a clean re-scan automatically. Markers, config and manual colors carry over.
+- Claim adapters per version: FTB Chunks only where Fabric builds exist (1.21.1;
+  1.21.11 deferred), OPAC on the 1.21.x targets, JSON import everywhere.
+
 ## 0.2.1 — 2026-07-19
 
 ### Fixed

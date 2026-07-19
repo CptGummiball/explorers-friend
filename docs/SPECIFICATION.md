@@ -1,5 +1,10 @@
 # Phase B – Spezifikation (MVP 0.1.0)
 
+> **Note (0.3.0):** historical MVP specification. Several "Nicht-Ziele" have since
+> shipped: overlays (claims/markers/players), Prometheus `/metrics` and multi-version
+> support for Minecraft 1.21.1 – 26.2 arrived in 0.2.0/0.3.0 — see
+> [CHANGELOG.md](../CHANGELOG.md) and [MULTIVERSION.md](MULTIVERSION.md).
+
 ## Produkt
 
 **The Explorer's Friend** (`explorersfriend`) — eine vollständig serverseitige,

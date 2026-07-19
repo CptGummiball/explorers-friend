@@ -1,5 +1,12 @@
 # Phase C – Architektur
 
+> **Note (0.3.0):** the codebase has since been restructured into a Gradle
+> multi-project — the Minecraft-free core lives in `common/`, thin per-version
+> adapters in `platforms/fabric-*`, convention plugins in `buildSrc/` (see
+> [MULTIVERSION.md](MULTIVERSION.md)). The component split, dataflow, threading and
+> error-handling described below are unchanged; "Einzelmodul" refers to the original
+> 0.1.0 layout.
+
 Einzelmodul-Gradle-Projekt (bewusst gegen Überarchitektur entschieden); Trennung erfolgt
 über Pakete mit klaren Abhängigkeitsrichtungen. Reine Logik (testbar ohne Minecraft) ist
 strikt von dünnen Minecraft-Adaptern getrennt.

@@ -2,9 +2,6 @@
 # blank_issues_enabled: false forces users to pick one of the templates.
 blank_issues_enabled: false
 contact_links:
-  - name: "💬 Questions & Support"
-    url: "https://discord.gg/YOUR_INVITE"
-    about: "Please ask questions and get support on our Discord instead of opening an issue."
-  - name: "📖 Wiki / Documentation"
-    url: "https://github.com/YOUR_NAME/YOUR_REPO/wiki"
+  - name: "📖 Documentation"
+    url: "https://github.com/CptGummiball/explorers-friend"
     about: "Check the documentation first — your question might already be answered there."

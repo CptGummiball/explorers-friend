@@ -12,21 +12,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # Java 21 feeds the 1.21.x toolchains; Java 25 (last entry = default JAVA_HOME)
+      # is the Gradle JVM - loom requires that for the Minecraft 26.x targets.
+      - name: Set up JDK 21 + 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: |
+            21
+            25
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build and test
-        run: ./gradlew clean test check build --no-daemon
+      - name: Build all version artifacts
+        run: ./gradlew buildAllVersions --no-daemon --stacktrace
 
-      - name: Upload mod JAR
+      - name: Run all tests
+        run: ./gradlew testAllVersions --no-daemon --stacktrace
+
+      - name: Package and verify artifacts
+        run: ./gradlew packageAllVersions verifyAllArtifacts --no-daemon --stacktrace
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: explorersfriend
-          path: build/libs/*.jar
+          name: explorersfriend-all-versions
+          path: |
+            dist/*.jar
+            dist/checksums-sha256.txt
+            dist/release-manifest.json
+            dist/compatibility.json
           if-no-files-found: error

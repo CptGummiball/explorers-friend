@@ -1,7 +1,7 @@
 # The Explorer's Friend
 
 **A lightweight, fully server-side browser world map for Fabric servers.**
-Minecraft 1.21.1 · Fabric · Java 21
+Minecraft 1.21.1 – 26.2 · Fabric · Java 21 / 25
 
 The Explorer's Friend renders a live topographic map of your world and serves it as a
 web page from an embedded HTTP server. It is built around three ideas:
@@ -21,11 +21,17 @@ web page from an embedded HTTP server. It is built around three ideas:
    tick); full renders read region files from disk on worker threads without loading
    a single chunk. All queues are bounded with backpressure and job merging.
 
+## Supported Minecraft versions
+
+Seven artifacts cover every stable release from **1.21.1 to 26.2**. Pick the jar matching your server version - full table, family boundaries and per-version integration availability in [docs/MULTIVERSION.md](docs/MULTIVERSION.md).
+
 ## Installation (server)
 
-1. Install a [Fabric server](https://fabricmc.net/use/server/) for Minecraft 1.21.1
-   (Java 21 or newer).
-2. Drop **explorersfriend-x.y.z.jar** and **[Fabric API](https://modrinth.com/mod/fabric-api)**
+1. Install a [Fabric server](https://fabricmc.net/use/server/) for a supported
+   Minecraft version (1.21.1 – 26.2). The 1.21.x artifacts need Java 21, the 26.x
+   artifacts Java 25 — see [docs/MULTIVERSION.md](docs/MULTIVERSION.md).
+2. Drop the **`explorersfriend-fabric-<mc-range>-x.y.z.jar` matching your Minecraft
+   version** (exactly one variant) and **[Fabric API](https://modrinth.com/mod/fabric-api)**
    into the `mods/` folder.
 3. Start the server. The map is available at **http://localhost:8080/** by default.
 

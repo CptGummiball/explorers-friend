@@ -1,9 +1,12 @@
 # API for mod developers
 
-Stability: **experimental** in 0.1.x — the concepts stay, signatures may still move.
-Everything lives in one class: `net.explorersfriend.api.ExplorersFriendApi`.
-Register during your own `onInitialize`; callbacks run on background workers — never
-block them or touch live world state from them.
+Stability: **experimental** in 0.x — the concepts stay, signatures may still move.
+Color and event registration lives in one class:
+`net.explorersfriend.api.ExplorersFriendApi` (part of the version-independent
+`common` core, identical in every release artifact); the player-visibility hook is
+platform-side since 0.3.0 (see below). Register during your own `onInitialize`;
+callbacks run on background workers — never block them or touch live world state
+from them.
 
 ## Provide colors for special blocks
 
@@ -25,9 +28,14 @@ Priority order: **manual user overrides** (`block-colors.jsonc`) → **API provi
 ## Hide players (vanish integrations)
 
 ```java
-ExplorersFriendApi.registerPlayerVisibilityProvider(player ->
+net.explorersfriend.world.PlayerVisibilityProviders.register(player ->
         !MyVanishMod.isVanished(player)); // false = never shown on the map
 ```
+
+(Since 0.3.0 this hook lives in the platform module rather than in
+`ExplorersFriendApi`, because its callback receives a Minecraft player type whose
+name differs between mappings eras. Before 0.3.0 it was
+`ExplorersFriendApi.registerPlayerVisibilityProvider`.)
 
 Called on the server thread during the periodic sample — keep it cheap. Any veto
 hides the player; built-in invisibility/spectator/config rules always apply on top.
@@ -57,7 +65,13 @@ is one region, i.e. blocks `[x*512, x*512+511]` × `[z*512, z*512+511]`.
 | `/api/players` | Visible players: name, uuid, world slug, rounded x/z, yaw |
 | `/tiles/{slug}/{zoom}/{x}_{z}.png` | Map tiles (ETag revalidation) |
 
-## Out of scope (planned, not in 0.1.0)
+Since 0.2.0 the overlay data additionally ships under the versioned `/api/v1/*`
+endpoints (`worlds`, `status`, `overlays`, `players`, `claims`, `markers`, `icons`,
+plus head/banner-icon PNGs) with ETag/revision-delta support, and an optional
+Prometheus `/metrics` endpoint. The unversioned `/api/*` endpoints above remain for
+compatibility.
+
+## Out of scope (planned, not implemented as of 0.3.0)
 
 Marker/layer registration, custom renderers, and web-UI extension points. Open an
 issue with your use case before building on internals — internal packages

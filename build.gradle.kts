@@ -50,7 +50,8 @@ tasks.register("packageAllVersions") {
         val testResults = file("dist/test-results.json").takeIf { it.exists() }
             ?.let { groovy.json.JsonSlurper().parse(it) as Map<*, *> } ?: emptyMap<Any, Any>()
         platformProjects.forEach { p ->
-            val remapJar = p.tasks.named("remapJar").get().outputs.files.singleFile
+            val artifactTask = p.tasks.findByName("remapJar") ?: p.tasks.getByName("jar")
+            val remapJar = artifactTask.outputs.files.files.first { it.name.endsWith(".jar") && !it.name.contains("-sources") }
             val target = dist.resolve(remapJar.name)
             remapJar.copyTo(target, overwrite = true)
             val digest = MessageDigest.getInstance("SHA-256")
@@ -96,6 +97,23 @@ tasks.register("packageAllVersions") {
         )
         dist.resolve("release-manifest.json")
             .writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifest)))
+        val compatibility = mapOf(
+            "modVersion" to modVersion,
+            "versions" to artifacts.flatMap { a ->
+                @Suppress("UNCHECKED_CAST")
+                (a["minecraft"] as List<String>).map { mcVer ->
+                    mapOf(
+                        "minecraft" to mcVer,
+                        "artifact" to a["file"],
+                        "java" to a["java"],
+                        "fabricLoaderMin" to a["fabricLoader"],
+                        "tested" to a["tested"]
+                    )
+                }
+            }
+        )
+        dist.resolve("compatibility.json")
+            .writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(compatibility)))
         println("dist/: ${artifacts.size} artifact(s) packaged")
     }
 }

@@ -1,0 +1,6 @@
+accessWidener v2 named
+
+# Server-side biome tinting needs the biome downfall value to sample the vanilla
+# grass/foliage colormaps. Biome.weather is private; the Weather record itself is public.
+accessible class net/minecraft/world/biome/Biome$Weather
+accessible field net/minecraft/world/biome/Biome weather Lnet/minecraft/world/biome/Biome$Weather;

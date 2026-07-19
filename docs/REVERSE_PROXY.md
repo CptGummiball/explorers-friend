@@ -25,8 +25,9 @@ server {
 }
 ```
 
-Sub-path deployments (`https://example.org/map/`) are not supported in 0.1.0 — use a
-dedicated (sub)domain. The frontend uses absolute paths (`/tiles/...`, `/api/...`).
+Sub-path deployments (`https://example.org/map/`) are not supported (as of 0.3.0) —
+use a dedicated (sub)domain. The frontend uses absolute paths (`/tiles/...`,
+`/api/...`).
 
 ## Caddy
 

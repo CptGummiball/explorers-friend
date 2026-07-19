@@ -1,5 +1,5 @@
 plugins {
-    id("explorersfriend.platform-conventions")
+    id("explorersfriend.platform-yarn")
 }
 
 dependencies {

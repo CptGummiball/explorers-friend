@@ -1,5 +1,10 @@
 # Claim provider integrations
 
+> Provider availability differs per Minecraft version - see the matrix in
+> [MULTIVERSION.md](MULTIVERSION.md). Notably: FTB Chunks has no Fabric builds for
+> 1.21.2-1.21.10 and 26.x; the existing FTB build for 1.21.11 and OPAC's 26.x builds
+> have no adapter yet (deferred, documented). The JSON import works everywhere.
+
 Verified on 2026-07-18 for Minecraft 1.21.1 / Fabric.
 
 | System | 1.21.1 Fabric | Official API | Change events | Colors/Names | Decision |
@@ -37,5 +42,6 @@ GriefPrevention export plugin would be a separate (Paper-side) project.
   dirty with debouncing; a configurable interval performs the authoritative sync;
   errors keep the last good data and back off exponentially.
 - Further systems can be added by implementing one interface
-  (`net.explorersfriend.claims.ClaimProvider`) and registering it in
-  `ClaimProviders.detect()`.
+  (`net.explorersfriend.claims.ClaimProvider`, in the version-independent `common`
+  module) and registering it in `ClaimProviders.detect()` (each
+  `platforms/fabric-*` module has its own copy).

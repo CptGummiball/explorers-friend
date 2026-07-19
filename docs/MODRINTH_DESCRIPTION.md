@@ -46,7 +46,8 @@ an optional Prometheus `/metrics` endpoint.
 
 ## Quick start
 
-1. Drop the JAR + [Fabric API](https://modrinth.com/mod/fabric-api) into `mods/`.
+1. Drop the JAR matching your Minecraft version (see the table below) +
+   [Fabric API](https://modrinth.com/mod/fabric-api) into `mods/`.
 2. Start the server → map at `http://localhost:8080/`.
 3. Render the already-explored world: `/efmap render minecraft:overworld`
 
@@ -54,10 +55,23 @@ On dedicated servers the first start downloads the vanilla client JAR once from
 Mojang's official servers (block textures are not in the server JAR; SHA-1-verified,
 cached, can be disabled).
 
-## Requirements
+## Minimum requirements
 
-- Minecraft **1.21.1**, Fabric Loader ≥ 0.16, **Fabric API**, Java **21**
-- Optional integrations: FTB Chunks, Open Parties and Claims
+Seven release files cover every stable Minecraft version from **1.21.1 to 26.2** —
+install exactly the one matching your server (each file lists its supported game
+versions):
+
+| Minecraft | Java | Fabric Loader |
+| --- | ---: | --- |
+| 1.21.1 – 1.21.8 | 21 | ≥ 0.16 |
+| 1.21.9 – 1.21.10 | 21 | ≥ 0.17.0 |
+| 1.21.11 | 21 | ≥ 0.17.3 |
+| 26.1 – 26.2 | 25 | ≥ 0.19 |
+
+- **Fabric API** is required on every version.
+- Optional integrations: FTB Chunks, Open Parties and Claims (availability differs
+  per Minecraft version — see the compatibility notes in the repository's
+  `docs/MULTIVERSION.md`; the JSON claim import works everywhere)
 
 ## Links
 

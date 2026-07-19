@@ -1,4 +1,4 @@
-# Verification protocol (0.1.0)
+# Verification protocol
 
 Executed on 2026-07-18, Windows 11, JDK 21.0.7, Gradle 9.5.0 (wrapper), Loom 1.17.16.
 
@@ -99,3 +99,68 @@ Fix verification (dedicated server, run 11):
 | Audit of all world accesses in event/server-thread paths | Only non-blocking lookups remain (`getChunk(..., create=false)`, biome lookups via `BIOMES`+`create=false`); `marker teleport` uses the vanilla teleport (documented, op-gated, not in a callback) |
 | Bonus | Chunk loads now also register named banners from the chunk's own block entities (dispenser-/mod-placed or pre-existing banners) |
 | Build | `gradlew clean test check build` → BUILD SUCCESSFUL (0.2.1) |
+
+
+---
+
+# 0.3.0 — Multi-version verification
+
+Executed on 2026-07-19, Windows 11. Gradle JVM: JDK 25 (Temurin 25.0.1.8, required
+by Loom for the 26.x targets); 1.21.x modules emit Java-21 bytecode via toolchains.
+
+## Build & structural checks
+
+- `gradlew buildAllVersions testAllVersions packageAllVersions verifyAllArtifacts`
+  → **BUILD SUCCESSFUL**. All common-core unit tests pass; seven artifacts in
+  `dist/` with `checksums-sha256.txt`, `release-manifest.json`, `compatibility.json`.
+- `verifyAllArtifacts` per jar: fabric.mod.json version + non-empty Minecraft range,
+  common core classes present, web UI present, zero test classes.
+- Family boundaries were derived by compiling the identical adapter source against
+  every stable release (probe module), then confirmed at runtime by smoke tests.
+  The smoke tests caught two boundaries invisible to compilation: the
+  `WorldChunk.setBlockState` third parameter changed `boolean`→`int` in 1.21.5
+  (split of the former 1.21.2–1.21.8 family into two jars; the 1.21.9+/26.x mixins
+  use `int`), and Fabric API's loader floor rose to 0.17.0 (1.21.9/1.21.10) and
+  0.17.3 (1.21.11) — loader pins and `fabric.mod.json` ranges were raised to match.
+
+## Dedicated-server smoke tests (scripts/smoke.py, headless, per artifact)
+
+Each run: fresh Fabric server (launcher from meta.fabricmc.net, Fabric API from
+Modrinth), our jar from `dist/`, then: server ready → jar-inventory scan → no client
+classes → web UI + /api/status + /api/worlds reachable → markers loaded → player
+layer served → claims detection logged → RCON stop with clean shutdown → second
+start with cache hits.
+
+| Artifact | Smoke-tested on | Java | Loader | Result |
+| --- | --- | ---: | --- | --- |
+| explorersfriend-fabric-1.21.1 | 1.21.1 | 21 | 0.16.14 | **passed** (all 9 checks) |
+| explorersfriend-fabric-1.21.2-1.21.4 | 1.21.4 | 21 | 0.16.14 | **passed** |
+| explorersfriend-fabric-1.21.5-1.21.8 | 1.21.5 | 21 | 0.16.14 | **passed** |
+| explorersfriend-fabric-1.21.9-1.21.10 | 1.21.10 | 21 | 0.17.0 | **passed** |
+| explorersfriend-fabric-1.21.11 | 1.21.11 | 21 | 0.17.3 | **passed** |
+| explorersfriend-fabric-26.1 | 26.1.2 | 25 | 0.19.3 | **passed** |
+| explorersfriend-fabric-26.2 | 26.2 | 25 | 0.19.3 | **passed** |
+
+"Tested" flags in `release-manifest.json` are generated from these results
+(`dist/test-results.json`); only smoke-passed artifacts carry `tested: true`.
+Family members not smoke-tested directly (e.g. 1.21.3, 1.21.6, 26.1.1) are covered
+by compile verification against their exact release + the family representative's
+runtime run; this distinction is documented rather than glossed over.
+
+## Negative tests (scripts/negative_smoke.py — 4/4 passed)
+
+| Case | Expectation | Observed |
+| --- | --- | --- |
+| 26.2 jar on a 1.21.4 server | Loader refuses | "Incompatible mods" — refused before world load |
+| Two variants at once (1.21.1 + 1.21.2-1.21.4 jars on 1.21.4) | Safe either way: refusal, or exactly one active instance (all ranges are disjoint) | Both behaviors observed across runs: loader refused the duplicate in the final suite; an earlier run selected the single compatible variant and started with exactly one instance. Both outcomes are safe. |
+| Missing Fabric API | Loader refuses | "Incompatible mods" — dependency error |
+| 26.2 artifact under Java 21 | Startup impossible | `UnsupportedClassVersionError` in the launcher's bundler phase; server never initializes |
+
+## Notes
+
+- The 1.21.1 artifact re-passed the full smoke suite after the multi-project
+  restructure — no regression against the 0.2.1 behavior (same checks incl.
+  second-start cache hits).
+- OPAC/FTB integration runtime verification remains as in 0.2.x on 1.21.1 (live
+  server run with OPAC + Forge Config API Port); other versions log honest
+  detection/absence messages (see docs/MULTIVERSION.md availability matrix).

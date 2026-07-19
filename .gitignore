@@ -20,3 +20,9 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Release staging + local server-run artifacts
+dist/
+.fabric/
+libraries/
+.claude/

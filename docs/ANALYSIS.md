@@ -1,5 +1,10 @@
 # Phase A – Analyse des Referenzprojekts Pl3xMap
 
+> **Note (0.3.0):** historical planning document. The "1.21.1 (Zielvorgabe)" in the
+> matrix below was the original MVP target; as of 0.3.0 the mod ships seven
+> artifacts covering Minecraft 1.21.1 – 26.2 (see
+> [MULTIVERSION.md](MULTIVERSION.md)).
+
 Vollständige Detailanalyse: [REFERENCE_ANALYSIS_PL3XMAP.md](REFERENCE_ANALYSIS_PL3XMAP.md)
 (analysierter Stand: Commit `0ae3449c`, 2026-07-11).
 
