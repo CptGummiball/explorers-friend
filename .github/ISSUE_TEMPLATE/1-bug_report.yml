@@ -28,8 +28,6 @@ body:
       label: "Minecraft Version"
       description: "Which Minecraft version are you playing on?"
       options:
-        - "26.2"
-        - "26.1"
         - "1.21.11"
         - "1.21.10"
         - "1.21.9"

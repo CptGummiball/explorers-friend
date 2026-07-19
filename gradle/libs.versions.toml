@@ -1,0 +1,58 @@
+# Central version pins for every target (no dynamic versions anywhere).
+# Sources: piston-meta.mojang.com (MC + Java), meta.fabricmc.net (loader/yarn),
+# Modrinth (Fabric API), maven.ftb.dev / Modrinth maven (claim integrations).
+[versions]
+# tooling
+loom = "1.17.16"
+loaderYarnEra = "0.16.14"   # minimum tested loader for the 1.21.x (obfuscated/yarn) era
+loader26 = "0.19.3"         # loader for the 26.x (unobfuscated) era
+gson = "2.10.1"
+slf4j = "2.0.16"
+junit = "5.10.3"
+
+# --- per-target Minecraft/Yarn/Fabric API ---
+mc12101 = "1.21.1"
+yarn12101 = "1.21.1+build.3"
+api12101 = "0.116.14+1.21.1"
+
+mc12102 = "1.21.2"
+yarn12102 = "1.21.2+build.1"
+api12102 = "0.106.1+1.21.2"
+mc12103 = "1.21.3"
+yarn12103 = "1.21.3+build.2"
+api12103 = "0.114.1+1.21.3"
+mc12104 = "1.21.4"
+yarn12104 = "1.21.4+build.8"
+api12104 = "0.119.4+1.21.4"
+mc12105 = "1.21.5"
+yarn12105 = "1.21.5+build.1"
+api12105 = "0.128.2+1.21.5"
+mc12106 = "1.21.6"
+yarn12106 = "1.21.6+build.1"
+api12106 = "0.128.2+1.21.6"
+mc12107 = "1.21.7"
+yarn12107 = "1.21.7+build.8"
+api12107 = "0.129.0+1.21.7"
+mc12108 = "1.21.8"
+yarn12108 = "1.21.8+build.1"
+api12108 = "0.136.1+1.21.8"
+mc12109 = "1.21.9"
+yarn12109 = "1.21.9+build.1"
+api12109 = "0.134.1+1.21.9"
+mc12110 = "1.21.10"
+yarn12110 = "1.21.10+build.3"
+api12110 = "0.138.4+1.21.10"
+mc12111 = "1.21.11"
+yarn12111 = "1.21.11+build.6"
+api12111 = "0.141.5+1.21.11"
+
+mc261 = "26.1.2"            # newest patch of the 26.1 line
+api261 = "0.155.2+26.1.2"
+mc262 = "26.2"
+api262 = "0.155.2+26.2"
+
+# claim integrations (compile-only; per era)
+ftbChunks1211 = "2101.1.20"
+ftbTeams1211 = "2101.1.10"
+ftbLibrary1211 = "2101.1.33"
+architectury1211 = "13.0.6"

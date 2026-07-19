@@ -1,89 +1,130 @@
+import java.security.MessageDigest
+import java.util.zip.ZipFile
+
+// Root: aggregation, dist packaging, artifact verification. No Java code here.
 plugins {
-    id("fabric-loom") version "1.17.16"
-    `java-library`
+    base
 }
 
 val modVersion = property("mod_version") as String
-val minecraftVersion = property("minecraft_version") as String
-val yarnMappings = property("yarn_mappings") as String
-val loaderVersion = property("loader_version") as String
-val fabricApiVersion = property("fabric_api_version") as String
 
-version = modVersion
-group = property("maven_group") as String
-
-base {
-    archivesName = "explorersfriend"
+allprojects {
+    group = "net.explorersfriend"
+    version = modVersion
 }
 
-repositories {
-    mavenCentral()
-    maven("https://maven.fabricmc.net/") { name = "FabricMC" }
-    maven("https://maven.ftb.dev/releases") {
-        name = "FTB"
-        content { includeGroup("dev.ftb.mods") }
+val platformProjects = subprojects.filter { it.path.startsWith(":platforms:") }
+val distDir = layout.projectDirectory.dir("dist")
+
+tasks.register("buildAllVersions") {
+    group = "explorersfriend"
+    description = "Builds every platform artifact plus the common core."
+    dependsOn(":common:build")
+    platformProjects.forEach { dependsOn("${it.path}:build") }
+}
+
+tasks.register("testAllVersions") {
+    group = "explorersfriend"
+    description = "Runs every test suite (core unit tests + per-platform tests where present)."
+    dependsOn(":common:test")
+    platformProjects.forEach { dependsOn("${it.path}:test") }
+}
+
+// GameTests are not used (documented); alias so the documented task name works.
+tasks.register("gameTestAllVersions") {
+    group = "explorersfriend"
+    description = "Alias of testAllVersions (no Minecraft GameTest harness in this project)."
+    dependsOn("testAllVersions")
+}
+
+tasks.register("packageAllVersions") {
+    group = "explorersfriend"
+    description = "Collects all release jars into dist/ with SHA-256 sums and a release manifest."
+    dependsOn("buildAllVersions")
+    doLast {
+        val dist = distDir.asFile
+        dist.mkdirs()
+        dist.listFiles()?.filter { it.name.endsWith(".jar") || it.name.endsWith(".txt") }?.forEach { it.delete() }
+        val checksums = StringBuilder()
+        val artifacts = mutableListOf<Map<String, Any>>()
+        val testResults = file("dist/test-results.json").takeIf { it.exists() }
+            ?.let { groovy.json.JsonSlurper().parse(it) as Map<*, *> } ?: emptyMap<Any, Any>()
+        platformProjects.forEach { p ->
+            val remapJar = p.tasks.named("remapJar").get().outputs.files.singleFile
+            val target = dist.resolve(remapJar.name)
+            remapJar.copyTo(target, overwrite = true)
+            val digest = MessageDigest.getInstance("SHA-256")
+            target.inputStream().use { input ->
+                val buffer = ByteArray(65536)
+                var read = input.read(buffer)
+                while (read >= 0) {
+                    digest.update(buffer, 0, read)
+                    read = input.read(buffer)
+                }
+            }
+            val sha = digest.digest().joinToString("") { "%02x".format(it) }
+            checksums.append(sha).append("  ").append(target.name).append('\n')
+            @Suppress("UNCHECKED_CAST")
+            val moduleMeta = (testResults[p.name] as? Map<String, Any>) ?: emptyMap()
+            artifacts.add(
+                mapOf(
+                    "file" to target.name,
+                    "module" to p.name,
+                    "minecraft" to (p.findProperty("supportedMc") as String? ?: p.findProperty("mc") as String)
+                        .split(",").map { it.trim() },
+                    "java" to ((p.findProperty("javaVersion") as String? ?: "21").toInt()),
+                    "fabricLoader" to (p.findProperty("loaderVersion") as String),
+                    "fabricApi" to (p.findProperty("fabricApi") as String),
+                    "sha256" to sha,
+                    "tested" to (moduleMeta["smoke"] == "passed")
+                )
+            )
+        }
+        dist.resolve("checksums-sha256.txt").writeText(checksums.toString())
+        val gitCommit = try {
+            val process = ProcessBuilder("git", "rev-parse", "HEAD")
+                .directory(rootDir).redirectErrorStream(true).start()
+            process.inputStream.bufferedReader().readText().trim().also { process.waitFor() }
+        } catch (e: Exception) {
+            "unknown"
+        }
+        val manifest = mapOf(
+            "modVersion" to modVersion,
+            "gitCommit" to gitCommit,
+            "builtAt" to java.time.OffsetDateTime.now().toString(),
+            "artifacts" to artifacts
+        )
+        dist.resolve("release-manifest.json")
+            .writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifest)))
+        println("dist/: ${artifacts.size} artifact(s) packaged")
     }
-    maven("https://maven.architectury.dev/") {
-        name = "Architectury"
-        content { includeGroup("dev.architectury") }
+}
+
+tasks.register("verifyAllArtifacts") {
+    group = "explorersfriend"
+    description = "Structural checks on every dist jar: fabric.mod.json version range, no test classes, core present."
+    dependsOn("packageAllVersions")
+    doLast {
+        val jars = distDir.asFile.listFiles { f -> f.name.endsWith(".jar") } ?: emptyArray()
+        require(jars.isNotEmpty()) { "no jars in dist/" }
+        jars.forEach { jarFile ->
+            ZipFile(jarFile).use { zip ->
+                val fmj = zip.getEntry("fabric.mod.json")
+                    ?: error("${jarFile.name}: fabric.mod.json missing")
+                val json = groovy.json.JsonSlurper()
+                    .parse(zip.getInputStream(fmj).readBytes()) as Map<*, *>
+                val depends = json["depends"] as Map<*, *>
+                require((depends["minecraft"] as String).isNotBlank()) { "${jarFile.name}: empty minecraft range" }
+                require(json["version"] == modVersion) { "${jarFile.name}: wrong version ${json["version"]}" }
+                require(zip.getEntry("net/explorersfriend/web/MapHttpServer.class") != null) {
+                    "${jarFile.name}: common core classes missing"
+                }
+                require(zip.getEntry("web/index.html") != null) { "${jarFile.name}: web UI missing" }
+                val testClasses = zip.entries().asSequence()
+                    .filter { it.name.endsWith("Test.class") }.count()
+                require(testClasses == 0) { "${jarFile.name}: contains $testClasses test classes" }
+            }
+            println("verified: ${jarFile.name}")
+        }
     }
-    maven("https://api.modrinth.com/maven") {
-        name = "Modrinth"
-        content { includeGroup("maven.modrinth") }
-    }
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/explorersfriend.accesswidener")
-}
-
-dependencies {
-    minecraft("com.mojang:minecraft:$minecraftVersion")
-    mappings("net.fabricmc:yarn:$yarnMappings:v2")
-    modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
-
-    // Optional claim-system integrations: compile-only against official APIs.
-    // Nothing is bundled; adapters are only activated when the mod is present at runtime.
-    modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:2101.1.20") { isTransitive = false }
-    modCompileOnly("dev.ftb.mods:ftb-teams-fabric:2101.1.10") { isTransitive = false }
-    modCompileOnly("dev.ftb.mods:ftb-library-fabric:2101.1.33") { isTransitive = false }
-    modCompileOnly("dev.architectury:architectury-fabric:13.0.6") { isTransitive = false }
-    modCompileOnly("maven.modrinth:open-parties-and-claims:cNfQARzn") { isTransitive = false }
-
-    testImplementation(platform("org.junit:junit-bom:5.10.3"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-    withSourcesJar()
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-    options.release = 21
-    options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
-}
-
-tasks.processResources {
-    inputs.property("version", modVersion)
-    filesMatching("fabric.mod.json") {
-        expand("version" to modVersion)
-    }
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-}
-
-tasks.jar {
-    from("LICENSE") { rename { "LICENSE_explorersfriend" } }
-    from("THIRD_PARTY_NOTICES.md") { rename { "THIRD_PARTY_NOTICES_explorersfriend.md" } }
 }
