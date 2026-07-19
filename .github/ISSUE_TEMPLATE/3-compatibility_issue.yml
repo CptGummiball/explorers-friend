@@ -1,0 +1,132 @@
+name: "🔧 Compatibility Issue"
+description: "This mod conflicts or misbehaves in combination with another mod."
+title: "[Compat]: "
+labels: ["compatibility", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when the problem **only** occurs in combination with another specific mod.
+        If the game crashes, please include the crash report — same rules as for a crash report.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "Before you report"
+      options:
+        - label: "I have searched the existing issues and this conflict has not been reported yet."
+          required: true
+        - label: "I have confirmed the issue does NOT occur when only one of the two mods is installed."
+          required: true
+        - label: "I am using the latest versions of both mods."
+          required: false
+
+  - type: input
+    id: conflicting-mod
+    attributes:
+      label: "Conflicting Mod (name + version)"
+      description: "Which mod does this mod conflict with? Please include a link if it's not well known."
+      placeholder: "e.g. Sodium 0.6.0 — https://modrinth.com/mod/sodium"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: "Minecraft Version"
+      options:
+        - "26.2"
+        - "26.1"
+        - "1.21.11"
+        - "1.21.10"
+        - "1.21.9"
+        - "1.21.8"
+        - "1.21.7"
+        - "1.21.6"
+        - "1.21.5"
+        - "1.21.4"
+        - "1.21.3"
+        - "1.21.2"
+        - "1.21.1"
+        - "Newer than listed"
+        - "Older than 1.21.1 (not supported)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-loader
+    attributes:
+      label: "Mod Loader"
+      options:
+        - "NeoForge"
+        - "Fabric"
+        - "Forge"
+        - "Quilt"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: "Version of THIS Mod"
+      placeholder: "e.g. 2.4.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      options:
+        - "Singleplayer"
+        - "Multiplayer (dedicated server)"
+        - "Multiplayer (LAN)"
+        - "Both singleplayer and multiplayer"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: "Type of Conflict"
+      options:
+        - "Crash when both mods are installed"
+        - "Visual / rendering issue"
+        - "Feature of this mod stops working"
+        - "Feature of the other mod stops working"
+        - "Items / recipes / worldgen conflict"
+        - "Performance degrades when combined"
+        - "Other (please describe below)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description of the Conflict"
+      description: "What exactly goes wrong, and how can we reproduce it?"
+      placeholder: |
+        1. Install both mods
+        2. Do '...'
+        3. Observe '...'
+    validations:
+      required: true
+
+  - type: input
+    id: log
+    attributes:
+      label: "Log / Crash Report"
+      description: "Link to `latest.log` or the crash report on [mclo.gs](https://mclo.gs)."
+      placeholder: "https://mclo.gs/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "Additional Context"
+      description: "Screenshots, videos or configs. You can attach files by dragging them into this field."
+    validations:
+      required: false

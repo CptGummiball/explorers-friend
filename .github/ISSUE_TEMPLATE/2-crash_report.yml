@@ -1,0 +1,145 @@
+name: "💥 Crash Report"
+description: "The game crashes, freezes or fails to launch because of the mod."
+title: "[Crash]: "
+labels: ["crash", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A crash without a crash report is almost impossible to fix.
+        You can find crash reports in `.minecraft/crash-reports/` and logs in `.minecraft/logs/latest.log`.
+        Please upload them to [mclo.gs](https://mclo.gs) — **do not paste the full log into the text fields.**
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "Before you report"
+      options:
+        - label: "I have searched the existing issues and this crash has not been reported yet."
+          required: true
+        - label: "I am using the latest version of the mod available for my Minecraft version."
+          required: true
+        - label: "I have verified the crash is related to this mod (it is mentioned in the crash report, or the crash stops when the mod is removed)."
+          required: false
+
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: "Minecraft Version"
+      options:
+        - "26.2"
+        - "26.1"
+        - "1.21.11"
+        - "1.21.10"
+        - "1.21.9"
+        - "1.21.8"
+        - "1.21.7"
+        - "1.21.6"
+        - "1.21.5"
+        - "1.21.4"
+        - "1.21.3"
+        - "1.21.2"
+        - "1.21.1"
+        - "Newer than listed"
+        - "Older than 1.21.1 (not supported)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-loader
+    attributes:
+      label: "Mod Loader"
+      options:
+        - "NeoForge"
+        - "Fabric"
+        - "Forge"
+        - "Quilt"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: loader-version
+    attributes:
+      label: "Mod Loader Version"
+      placeholder: "e.g. NeoForge 21.1.92 / Fabric Loader 0.16.9"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: "Mod Version"
+      placeholder: "e.g. 2.4.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "What crashes?"
+      options:
+        - "Client (singleplayer)"
+        - "Client (while connected to a server)"
+        - "Dedicated server"
+        - "Both client and server"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: crash-timing
+    attributes:
+      label: "When does the crash happen?"
+      options:
+        - "On game launch / startup"
+        - "When loading or creating a world"
+        - "When joining a server"
+        - "During world generation / exploring new chunks"
+        - "When interacting with a specific block, item or entity"
+        - "Randomly during gameplay"
+        - "On game exit"
+        - "Other (please describe below)"
+    validations:
+      required: true
+
+  - type: input
+    id: crash-report
+    attributes:
+      label: "Crash Report / Log"
+      description: "Link to the crash report or `latest.log` on [mclo.gs](https://mclo.gs) or [gist.github.com](https://gist.github.com)."
+      placeholder: "https://mclo.gs/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "What were you doing when the crash happened?"
+      description: "Describe as precisely as possible what led to the crash and how to reproduce it."
+      placeholder: |
+        1. Open the '...' GUI
+        2. Shift-click item '...'
+        3. Game crashes
+    validations:
+      required: true
+
+  - type: dropdown
+    id: isolated
+    attributes:
+      label: "Does the crash also happen with only this mod installed?"
+      options:
+        - "Yes — it crashes with only this mod (+ required libraries)"
+        - "No — it only crashes together with other mods"
+        - "I haven't tested it"
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: "Other Installed Mods"
+      description: "Full mod list (or a link to your modpack). Write \"none\" if this mod was installed alone."
+    validations:
+      required: false

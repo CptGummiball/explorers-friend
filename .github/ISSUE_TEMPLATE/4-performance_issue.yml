@@ -1,0 +1,130 @@
+name: "🐢 Performance Issue"
+description: "Low FPS, server lag, memory problems or long loading times caused by the mod."
+title: "[Performance]: "
+labels: ["performance", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Performance issues are much easier to diagnose with a profiler report.
+        We recommend [spark](https://spark.lucko.me/) (`/spark profiler start` … `/spark profiler stop`) — please include the report link if possible.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "Before you report"
+      options:
+        - label: "I have searched the existing issues and this problem has not been reported yet."
+          required: true
+        - label: "I have confirmed the performance issue is related to this mod (e.g. it disappears when the mod is removed, or a profiler points at it)."
+          required: false
+
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: "Minecraft Version"
+      options:
+        - "26.2"
+        - "26.1"
+        - "1.21.11"
+        - "1.21.10"
+        - "1.21.9"
+        - "1.21.8"
+        - "1.21.7"
+        - "1.21.6"
+        - "1.21.5"
+        - "1.21.4"
+        - "1.21.3"
+        - "1.21.2"
+        - "1.21.1"
+        - "Newer than listed"
+        - "Older than 1.21.1 (not supported)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-loader
+    attributes:
+      label: "Mod Loader"
+      options:
+        - "NeoForge"
+        - "Fabric"
+        - "Forge"
+        - "Quilt"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: "Mod Version"
+      placeholder: "e.g. 2.4.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      options:
+        - "Client (singleplayer)"
+        - "Client (while connected to a server)"
+        - "Dedicated server"
+        - "Both client and server"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: "Type of Performance Issue"
+      options:
+        - "Low FPS / client-side lag"
+        - "Server lag / low TPS"
+        - "Stuttering / lag spikes"
+        - "High memory usage / out of memory"
+        - "Long game or world load times"
+        - "Large world save files"
+        - "Other (please describe below)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: "When does the issue occur? Since which version? What have you already tried?"
+    validations:
+      required: true
+
+  - type: input
+    id: profiler
+    attributes:
+      label: "Profiler Report"
+      description: "Link to a [spark](https://spark.lucko.me/) report or similar."
+      placeholder: "https://spark.lucko.me/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: specs
+    attributes:
+      label: "System Specs"
+      description: "CPU, GPU, RAM, allocated RAM, Java version. For servers: hosting type and hardware."
+      placeholder: |
+        CPU: ...
+        GPU: ...
+        RAM (allocated): ... GB
+        Java: ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: "Other Installed Mods"
+      description: "Mod list or modpack link — especially performance mods (Sodium, Lithium, etc.)."
+    validations:
+      required: false

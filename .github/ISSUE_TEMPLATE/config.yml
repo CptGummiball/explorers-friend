@@ -1,0 +1,7 @@
+# Configuration for the issue chooser ("New Issue" page)
+# blank_issues_enabled: false forces users to pick one of the templates.
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 Documentation"
+    url: "https://github.com/CptGummiball/explorers-friend"
+    about: "Check the documentation first — your question might already be answered there."

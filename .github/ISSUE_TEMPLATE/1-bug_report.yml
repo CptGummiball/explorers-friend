@@ -1,0 +1,140 @@
+name: "🐛 Bug Report"
+description: "Something in the mod doesn't work as expected (no crash)."
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug!
+        Please fill out the form below as completely as possible — incomplete reports are much harder to fix.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "Before you report"
+      description: "Please confirm the following before submitting."
+      options:
+        - label: "I have searched the existing issues and this bug has not been reported yet."
+          required: true
+        - label: "I am using the latest version of the mod available for my Minecraft version."
+          required: true
+        - label: "I can reproduce this issue consistently (or I have described how often it happens)."
+          required: false
+
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: "Minecraft Version"
+      description: "Which Minecraft version are you playing on?"
+      options:
+        - "26.2"
+        - "26.1"
+        - "1.21.11"
+        - "1.21.10"
+        - "1.21.9"
+        - "1.21.8"
+        - "1.21.7"
+        - "1.21.6"
+        - "1.21.5"
+        - "1.21.4"
+        - "1.21.3"
+        - "1.21.2"
+        - "1.21.1"
+        - "Newer than listed"
+        - "Older than 1.21.1 (not supported)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-loader
+    attributes:
+      label: "Mod Loader"
+      options:
+        - "NeoForge"
+        - "Fabric"
+        - "Forge"
+        - "Quilt"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: loader-version
+    attributes:
+      label: "Mod Loader Version"
+      placeholder: "e.g. NeoForge 21.1.92 / Fabric Loader 0.16.9"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: "Mod Version"
+      description: "The exact version of this mod. \"Latest\" is not a version number."
+      placeholder: "e.g. 2.4.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "Where does the bug occur?"
+      options:
+        - "Singleplayer"
+        - "Multiplayer (dedicated server)"
+        - "Multiplayer (LAN)"
+        - "Realms"
+        - "Both singleplayer and multiplayer"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "What happened? What did you expect to happen instead?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Step-by-step instructions so we can reproduce the bug."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Place block '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: input
+    id: log
+    attributes:
+      label: "Log File"
+      description: "Please upload your `latest.log` to [mclo.gs](https://mclo.gs) or [gist.github.com](https://gist.github.com) and paste the link here."
+      placeholder: "https://mclo.gs/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: "Other Installed Mods"
+      description: "List other mods that were installed, or paste your mod list. Write \"none\" if this mod was installed alone."
+      placeholder: "e.g. JEI 19.5.2, Sodium 0.6.0, ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "Additional Context"
+      description: "Screenshots, videos, config files or anything else that helps us understand the problem. You can attach files by dragging them into this field."
+    validations:
+      required: false

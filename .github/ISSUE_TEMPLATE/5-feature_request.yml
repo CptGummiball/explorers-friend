@@ -1,0 +1,82 @@
+name: "💡 Feature Request"
+description: "Suggest a new feature or an improvement for the mod."
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your suggestion! Please describe your idea as concretely as possible.
+        One request per issue — if you have several ideas, please open separate issues.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "Before you suggest"
+      options:
+        - label: "I have searched the existing issues (including closed ones) and this has not been suggested yet."
+          required: true
+        - label: "This feature does not already exist in the latest version of the mod."
+          required: true
+
+  - type: dropdown
+    id: request-type
+    attributes:
+      label: "Type of Request"
+      options:
+        - "New feature / content (blocks, items, mechanics, ...)"
+        - "Improvement of an existing feature"
+        - "New config option"
+        - "Balancing change"
+        - "Compatibility / integration with another mod"
+        - "API / developer request"
+        - "Translation / localization"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Relevant Environment"
+      description: "Where would this feature mainly apply?"
+      options:
+        - "Client-side"
+        - "Server-side"
+        - "Both"
+        - "Not sure"
+    validations:
+      required: false
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: "Problem / Motivation"
+      description: "What problem does this solve, or why would it improve the mod?"
+      placeholder: "I'm always frustrated when ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe how the feature should work — the more concrete, the better."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered"
+      description: "Other approaches you've thought about, or mods that already do something similar."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "Additional Context"
+      description: "Mockups, screenshots, examples from other mods, links. You can attach files by dragging them into this field."
+    validations:
+      required: false
