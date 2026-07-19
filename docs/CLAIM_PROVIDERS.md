@@ -1,9 +1,27 @@
 # Claim provider integrations
 
 > Provider availability differs per Minecraft version - see the matrix in
-> [MULTIVERSION.md](MULTIVERSION.md). Notably: FTB Chunks has no Fabric builds for
-> 1.21.2-1.21.10 and 26.x; the existing FTB build for 1.21.11 and OPAC's 26.x builds
-> have no adapter yet (deferred, documented). The JSON import works everywhere.
+> [MULTIVERSION.md](MULTIVERSION.md). Since 0.4.0: FTB Chunks adapters exist for
+> 1.21.1 **and 1.21.11** (no Fabric builds exist for the versions in between or
+> 26.x), the OPAC adapter covers **all** supported versions including 26.x, and the
+> **Common Protection API** provider (GOML ReServed etc.) works everywhere. The
+> JSON import works everywhere.
+
+## Common Protection API (GOML ReServed and others) — since 0.4.0
+
+The [Common Protection API](https://github.com/Patbox/common-protection-api) is a
+query-only interface: it answers "is this position/area protected?" but cannot
+enumerate claims, owners or names. The provider therefore probes chunks as the
+server loads them (queued from the chunk-load event, executed on the server tick
+with a fixed budget of 128 probes/tick — never inside the chunk callback) and
+persists the protected set in `explorersfriend/protected-chunks.json`. Consequences,
+honestly stated:
+
+- The overlay shows protected areas **where players have actually been** since the
+  provider was enabled; unexplored claims appear once their chunks load.
+- Chunks whose protection was removed heal out the next time they load.
+- No owner or claim names — areas are labeled "Protected area" and use the default
+  claim color. Provider id for `claims.enabled-providers`: `commonprotection`.
 
 Verified on 2026-07-18 for Minecraft 1.21.1 / Fabric.
 

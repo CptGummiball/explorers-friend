@@ -112,6 +112,70 @@ New keys: `default-visible-in-ui`, `position-delay-seconds` (anti-stalking),
 `save-interval-seconds`. External icon directories are deliberately unsupported
 (SVG = XSS vector); the built-in library covers 23 icons.
 
+## `markers.custom-icons` (since 0.4.0)
+
+User-supplied marker icons from `config/explorersfriend/icons/`. PNG/JPEG only —
+every file is decoded and re-encoded server-side before serving (uploaded bytes
+never reach a browser); SVG is deliberately not supported for user content. The
+file name (without extension) becomes the icon id, used as `custom:<name>` in
+marker commands; names must match `[a-z0-9_-]{1,32}`.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `true` | Master switch. |
+| `max-count` | `64` | Maximum icons loaded (alphabetical; the rest is logged and skipped). |
+| `max-edge-px` | `128` | Maximum image width/height. |
+| `max-file-kib` | `256` | Maximum file size per icon. |
+
+Reload together with the config: `/efmap reload`.
+
+## `waystones` (since 0.4.0)
+
+Only active when the [Waystones](https://modrinth.com/mod/waystones) mod is
+installed; named waystones then appear as their own toggleable layer. Sharestones
+and shard-bound waystones are never shown.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `true` | Master switch for the layer. |
+| `only-global` | `false` | `true` = only waystones with GLOBAL visibility. |
+| `show-owner` | `false` | Show the owner name in tooltips. |
+| `refresh-seconds` | `60` | Refresh interval for the waystone list. |
+| `disabled-worlds` | `[]` | Dimensions excluded from the layer. |
+| `default-visible-in-ui` | `true` | Initial state of the UI toggle. |
+
+## `markers.custom-icons` (since 0.4.0)
+
+User-supplied marker icons from `config/explorersfriend/icons/`. PNG/JPEG only -
+every file is decoded and re-encoded server-side before serving; SVG is
+deliberately not supported for user content. The file name (without extension)
+becomes the icon id, used as `custom:<name>` in marker commands; names must match
+`[a-z0-9_-]{1,32}`.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `true` | Master switch. |
+| `max-count` | `64` | Maximum icons loaded (alphabetical; the rest is logged and skipped). |
+| `max-edge-px` | `128` | Maximum image width/height. |
+| `max-file-kib` | `256` | Maximum file size per icon. |
+
+Reload together with the config: `/efmap reload`.
+
+## `waystones` (since 0.4.0)
+
+Only active when the [Waystones](https://modrinth.com/mod/waystones) mod is
+installed; named waystones then appear as their own toggleable layer. Sharestones
+and shard-bound waystones are never shown.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `true` | Master switch for the layer. |
+| `only-global` | `false` | `true` = only waystones with GLOBAL visibility. |
+| `show-owner` | `false` | Show the owner name in tooltips. |
+| `refresh-seconds` | `60` | Refresh interval for the waystone list. |
+| `disabled-worlds` | `[]` | Dimensions excluded from the layer. |
+| `default-visible-in-ui` | `true` | Initial state of the UI toggle. |
+
 ## `performance`
 
 `auto-throttle` (default true), `mspt-pause-threshold` (45), `mspt-resume-threshold`

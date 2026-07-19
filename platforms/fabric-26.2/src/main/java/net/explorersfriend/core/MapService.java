@@ -25,8 +25,12 @@ import net.explorersfriend.claims.ClaimProviders;
 import net.explorersfriend.claims.MapClaim;
 import net.explorersfriend.marker.BannerIconRenderer;
 import net.explorersfriend.marker.BannerWatcher;
+import net.explorersfriend.claims.provider.CommonProtectionClaimProvider;
+import net.explorersfriend.integration.WaystonesLayerProvider;
+import net.explorersfriend.marker.CustomIconStore;
 import net.explorersfriend.marker.MarkerStore;
 import net.explorersfriend.overlay.OverlayLayer;
+import net.explorersfriend.waystone.WaystonePoint;
 import net.explorersfriend.web.OverlayWebService;
 import net.explorersfriend.world.LivePlayerService;
 import net.explorersfriend.world.SkinService;
@@ -111,6 +115,9 @@ public final class MapService {
     private ClaimManager claimManager;
     private OverlayLayer<MarkerStore.Item> markersLayer;
     private MarkerStore markerStore;
+    private CustomIconStore customIconStore;
+    private OverlayLayer<WaystonePoint> waystonesLayer;
+    private int waystoneRefreshCountdown = 100;   // first refresh ~5s after start
     private volatile BannerWatcher bannerWatcher;
     private BannerIconRenderer bannerIcons;
     private volatile boolean autoThrottled;
@@ -119,6 +126,12 @@ public final class MapService {
         this.server = server;
         this.configDir = FabricLoader.getInstance().getConfigDir().resolve("explorersfriend");
         this.config = ConfigIO.loadOrCreate(configDir.resolve("config.jsonc"));
+        customIconStore = new CustomIconStore(configDir.resolve("icons"));
+        customIconStore.reload(config.markers().customIcons());
+        if (config.waystones().enabled() && WaystonesLayerProvider.isAvailable()) {
+            waystonesLayer = new OverlayLayer<>("waystones");
+            LOGGER.info("[ExplorersFriend/Waystones] Waystones detected - layer enabled");
+        }
         Path runDir = server.getServerDirectory().toAbsolutePath().normalize();
         this.dataDir = runDir.resolve(config.storage().dataDir()).normalize();
         this.cacheDir = dataDir.resolve("cache");
@@ -325,7 +338,9 @@ public final class MapService {
                     () -> worldsJson,
                     this::buildStatusJson,
                     this::buildMetricsText,
-                    claimManager == null ? List.of() : claimManager.providerIds()));
+                    claimManager == null ? List.of() : claimManager.providerIds(),
+                    customIconStore,
+                    waystonesLayer));
         } catch (IOException e) {
             LOGGER.error("[ExplorersFriend/Web] Could not start the web server on {}:{} ({}). "
                     + "The map is unavailable; the game server keeps running.",
@@ -354,7 +369,8 @@ public final class MapService {
         if (config.claims().enabled()) {
             claimsLayer = new OverlayLayer<>("claims");
             List<net.explorersfriend.claims.ClaimProvider> providers =
-                    ClaimProviders.detect(server, config.claims(), configDir);
+                    ClaimProviders.detect(server, config.claims(), configDir,
+                            dataDir);
             claimManager = new ClaimManager(claimsLayer, providers, config.claims(),
                     server, scanPool, this::dimensionIdToSlug);
             claimManager.start(sched);
@@ -536,6 +552,11 @@ public final class MapService {
     // --- event handlers (registered in ExplorersFriend) ---------------------
 
     public void onEndTick() {
+        if (waystonesLayer != null && --waystoneRefreshCountdown <= 0) {
+            waystoneRefreshCountdown = Math.max(5, config.waystones().refreshSeconds()) * 20;
+            waystonesLayer.replaceAll(WaystonesLayerProvider.collect(server, config.waystones()));
+        }
+        CommonProtectionClaimProvider.tickCurrent();
         if (!ready || stopping || readOnly) {
             return;
         }
@@ -550,6 +571,7 @@ public final class MapService {
     }
 
     public void onChunkLoad(ServerLevel world, LevelChunk chunk) {
+        CommonProtectionClaimProvider.chunkLoaded(world, chunk.getPos().x(), chunk.getPos().z());
         if (!ready || stopping || readOnly || !config.render().renderNewChunks()) {
             return;
         }
@@ -723,6 +745,7 @@ public final class MapService {
         scanPool.submit(() -> {
             synchronized (webRestartLock) {
                 MapConfig newConfig = ConfigIO.loadOrCreate(configDir.resolve("config.jsonc"));
+        customIconStore.reload(newConfig.markers().customIcons());
                 this.config = newConfig;
                 if (webServer != null) {
                     String old = webServer.bindDescription();
@@ -749,6 +772,7 @@ public final class MapService {
     /** Reloads config values + manual colors; swaps palettes without a restart. */
     public String reload() {
         MapConfig newConfig = ConfigIO.loadOrCreate(configDir.resolve("config.jsonc"));
+        customIconStore.reload(newConfig.markers().customIcons());
         this.config = newConfig;
         if (ready && colorData != null) {
             scanPool.submit(this::reloadColorsInternal);

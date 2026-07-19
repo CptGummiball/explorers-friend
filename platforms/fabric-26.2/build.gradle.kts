@@ -4,7 +4,12 @@ plugins {
     id("explorersfriend.platform-noremap")
 }
 
-// Claim integrations are wired per era; availability for 26.x is checked in Phase E
-// (providers excluded from compilation until their 26.x artifacts are confirmed).
+// FTB Chunks has no build for this Minecraft generation; OPAC + JSON import are active.
 sourceSets["main"].java.exclude("**/claims/provider/FtbChunksClaimProvider.java")
-sourceSets["main"].java.exclude("**/claims/provider/OpacClaimProvider.java")
+
+dependencies {
+    compileOnly("eu.pb4:common-protection-api:2.0.0") { isTransitive = false }
+    compileOnly("maven.modrinth:waystones:26.2.0.5+fabric-26.2") { isTransitive = false }
+    compileOnly("me.lucko:fabric-permissions-api:0.7.0") { isTransitive = false }
+    compileOnly("maven.modrinth:open-parties-and-claims:fabric-26.2-0.27.8") { isTransitive = false }
+}

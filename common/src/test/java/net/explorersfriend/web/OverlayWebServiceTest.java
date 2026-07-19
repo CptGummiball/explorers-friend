@@ -44,7 +44,7 @@ class OverlayWebServiceTest {
                 () -> "{\"worlds\":[]}".getBytes(StandardCharsets.UTF_8),
                 () -> "{\"ready\":true}".getBytes(StandardCharsets.UTF_8),
                 () -> "ef_up 1\n",
-                List.of("jsonimport"));
+                List.of("jsonimport"), null, null);
     }
 
     private static JsonObject json(OverlayWebService.Response response) {
@@ -152,11 +152,11 @@ class OverlayWebServiceTest {
         MapConfig.Claims small = new MapConfig.Claims(true, true, 60, 0.3, 1.0, 2, true, true, true,
                 List.of("*"), List.of(), 100, 0x4080FF);
         MapConfig config = new MapConfig(base.web(), base.render(), base.scan(), base.storage(),
-                base.worlds(), base.players(), base.logging(), base.blocks(), small, base.markers(),
+                base.worlds(), base.players(), base.logging(), base.blocks(), small, base.markers(), base.waystones(),
                 base.performance());
         OverlayWebService capped = new OverlayWebService(config, () -> Set.of("overworld"),
                 many, null, null, u -> null, h -> null,
-                () -> new byte[0], () -> new byte[0], () -> "", List.of());
+                () -> new byte[0], () -> new byte[0], () -> "", List.of(), null, null);
         JsonObject body = json(capped.handle("/api/v1/claims", Map.of("world", "overworld"), null));
         assertEquals(20, body.getAsJsonArray("items").size());
         assertTrue(!body.has("truncated"), "20 items fit the 100 cap");

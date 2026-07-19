@@ -49,3 +49,15 @@ Exactly one, optional: the one-time download of the vanilla client JAR from
 `piston-meta.mojang.com` / `piston-data.mojang.com` (Mojang's official distribution,
 SHA-1 verified, host pinned). Disable with `scan.download-vanilla-assets: false`.
 Nothing is ever uploaded anywhere.
+
+
+## Custom icons (since 0.4.0)
+
+User-supplied marker icons are restricted to raster formats (PNG/JPEG). Every file
+is fully decoded and re-encoded to PNG on the server before it can be served, so
+crafted files can at worst fail to decode - original upload bytes never reach a
+browser. SVG remains unsupported for user content (script/XSS vector; the built-in
+SVG icons ship from the mod jar only). Icon ids come from an allowlist pattern
+(`[a-z0-9_-]{1,32}`), are resolved from an in-memory index and never touch the file
+system on request paths. Size, dimension and count limits are enforced
+(`markers.custom-icons`).

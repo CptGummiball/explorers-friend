@@ -4,4 +4,10 @@ plugins {
 }
 
 sourceSets["main"].java.exclude("**/claims/provider/FtbChunksClaimProvider.java")
-sourceSets["main"].java.exclude("**/claims/provider/OpacClaimProvider.java")
+
+dependencies {
+    compileOnly("eu.pb4:common-protection-api:2.0.0") { isTransitive = false }
+    compileOnly("maven.modrinth:waystones:26.1.2.10+fabric-26.1.2") { isTransitive = false }
+    compileOnly("me.lucko:fabric-permissions-api:0.7.0") { isTransitive = false }
+    compileOnly("maven.modrinth:open-parties-and-claims:fabric-26.1.2-0.27.8") { isTransitive = false }
+}

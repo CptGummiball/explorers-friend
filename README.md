@@ -56,7 +56,7 @@ that already exists:
 Progress is shown in the console and via `/efmap status`. Full renders are resumable:
 an interrupted render continues automatically on the next start.
 
-## Overlays: claims, players, markers
+## Overlays: claims, players, markers, waystones
 
 Three independent overlay layers ship with the map — all separate from the rendered
 tiles, individually toggleable in the web UI (state persists in the browser):
@@ -72,7 +72,13 @@ tiles, individually toggleable in the web UI (state persists in the browser):
   library, plus **banner markers**: rename a banner in an anvil and place it — it
   appears on the map with its actual pattern; breaking it removes it.
 
-## Commands (`/efmap`, permission level 2)
+## Commands (`/efmap`)
+
+Every subcommand carries a permission node (`explorersfriend.command.<sub>`,
+marker subcommands `explorersfriend.command.marker.<sub>`, foreign-marker rights
+`explorersfriend.command.marker.admin`) served via the fabric-permissions-api
+(LuckPerms etc., since 0.4.0). Without a permissions mod, the classic OP-level
+requirement (level 2, `cache prune` level 3) applies unchanged.
 
 | Command | Effect |
 | --- | --- |

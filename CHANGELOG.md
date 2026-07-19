@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased (0.4.0-dev)
+
+In development - not released. Ships together with fixes for incoming GitHub issues.
+
+### Added
+- **Custom marker icons**: drop PNG/JPEG files into `config/explorersfriend/icons/`
+  and use them as `custom:<name>` in marker commands and the web UI. Files are
+  decoded and re-encoded server-side (never served as uploaded), validated against
+  strict name/size/count limits (`markers.custom-icons` config section) and served
+  under `/icons/c/<name>.png`. SVG stays deliberately unsupported for user content.
+- **Permission nodes** for every `/efmap` command via the fabric-permissions-api
+  (served by LuckPerms and friends): `explorersfriend.command.<sub>`,
+  `explorersfriend.command.marker.<sub>`, `explorersfriend.command.marker.admin`,
+  `explorersfriend.command.cache.prune`. Without a permissions mod the classic
+  OP-level fallback applies unchanged. Available on every supported Minecraft
+  version (API 0.3.3 / 0.6.1 / 0.7.0 per era).
+- **Waystones layer**: named waystones from the Waystones mod appear as their own
+  toggleable map layer on all supported versions (adapter per version, official
+  `net.blay09.mods.waystones.api`). Sharestones and shard-bound waystones are never
+  shown; `waystones.only-global` restricts further; owner display is opt-in.
+- **Claim providers**: FTB Chunks adapter now also on 1.21.11 (FTB Chunks 2111.x);
+  Open Parties and Claims adapter now also on 26.1/26.2; new **Common Protection
+  API** provider (GOML ReServed and other Patbox-API mods) that samples loaded
+  chunks with a per-tick budget and persists the protected set - this API exposes
+  no owners/names and cannot enumerate claims, so coverage grows with player
+  activity (documented in docs/CLAIM_PROVIDERS.md).
+
+
 ## 0.3.0 — 2026-07-19
 
 ### Added

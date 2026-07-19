@@ -72,7 +72,7 @@ public final class OpacClaimProvider implements ClaimProvider {
             info.getStream().forEach(dimensionEntry -> {
                 Identifier dimension = dimensionEntry.getKey();
                 Map<Integer, Set<Long>> chunksBySub = new HashMap<>();
-                dimensionEntry.identifier().getStream().forEach(posList -> {
+                dimensionEntry.getValue().getStream().forEach(posList -> {
                     IPlayerChunkClaimAPI state = posList.getClaimState();
                     Set<Long> chunks = chunksBySub.computeIfAbsent(state.getSubConfigIndex(),
                             k -> new HashSet<>());

@@ -18,6 +18,7 @@ public record MapConfig(
         Blocks blocks,
         Claims claims,
         Markers markers,
+        Waystones waystones,
         Performance performance) {
 
     public record Web(
@@ -126,7 +127,26 @@ public record MapConfig(
             boolean showCreator,
             boolean showCoordinates,
             List<String> disabledWorlds,
-            int saveIntervalSeconds) {
+            int saveIntervalSeconds,
+            CustomIcons customIcons) {
+    }
+
+    /** User-supplied marker icons (config/explorersfriend/icons/, PNG/JPEG only). */
+    public record CustomIcons(
+            boolean enabled,
+            int maxCount,
+            int maxEdgePx,
+            int maxFileKiB) {
+    }
+
+    /** Waystones-mod overlay layer (only used when the Waystones mod is installed). */
+    public record Waystones(
+            boolean enabled,
+            boolean onlyGlobal,
+            boolean showOwner,
+            int refreshSeconds,
+            List<String> disabledWorlds,
+            boolean defaultVisibleInUi) {
     }
 
     public record Performance(
@@ -149,7 +169,9 @@ public record MapConfig(
                 new Claims(true, true, 60, 0.30, 1.0, 2, true, true, true,
                         List.of("*"), List.of(), 5000, 0x4080FF),
                 new Markers(true, true, true, 30, 5000, true, true, true, false, true,
-                        List.of(), 30),
+                        List.of(), 30,
+                        new CustomIcons(true, 64, 128, 256)),
+                new Waystones(true, false, false, 60, List.of(), true),
                 new Performance(true, 45, 35));
     }
 }

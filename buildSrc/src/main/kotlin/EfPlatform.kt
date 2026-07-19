@@ -36,6 +36,10 @@ fun Project.configureEfPlatform(yarnEra: Boolean) {
         name = "Architectury"
         content { includeGroup("dev.architectury") }
     }
+    repositories.maven("https://maven.nucleoid.xyz") {
+        name = "Nucleoid"
+        content { includeGroup("eu.pb4") }
+    }
     repositories.maven("https://api.modrinth.com/maven") {
         name = "Modrinth"
         content { includeGroup("maven.modrinth") }

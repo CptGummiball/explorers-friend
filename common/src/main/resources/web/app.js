@@ -55,6 +55,7 @@
     claims: layerPrefs.claims,
     markers: layerPrefs.markers,
     banners: layerPrefs.banners,
+    waystones: layerPrefs.waystones,
     players: layerPrefs.players,
     names: layerPrefs.names,
   };
@@ -65,6 +66,7 @@
   const overlays = {
     claims: { items: [], etag: null, world: null },
     markers: { items: [], etag: null, world: null },
+    waystones: { items: [], etag: null, world: null },
     claimCfg: { fillOpacity: 0.3, borderWidth: 2 },
   };
   const iconImages = new Map();   // icon id / banner hash -> Image
@@ -84,7 +86,9 @@
   async function fetchOverlay(kind) {
     if (!state.world) return;
     const store = overlays[kind];
-    const enabled = kind === "claims" ? layers.claims : (layers.markers || layers.banners);
+    const enabled = kind === "claims" ? layers.claims
+        : kind === "waystones" ? layers.waystones
+        : (layers.markers || layers.banners);
     if (!enabled) return; // disabled layers cause no requests
     try {
       const headers = {};
@@ -103,6 +107,7 @@
   function refreshOverlays() {
     fetchOverlay("claims");
     fetchOverlay("markers");
+    fetchOverlay("waystones");
   }
 
   function argbToRgba(hex) {
@@ -135,12 +140,13 @@
   }
 
   function visibleMarkers() {
-    return overlays.markers.items.filter(m =>
+    const base = overlays.markers.items.filter(m =>
         m.source === "banner" ? layers.banners : layers.markers);
+    return layers.waystones ? base.concat(overlays.waystones.items) : base;
   }
 
   function drawMarkers(scale, minBlockX, minBlockZ) {
-    if (!layers.markers && !layers.banners) return;
+    if (!layers.markers && !layers.banners && !layers.waystones) return;
     const markers = visibleMarkers();
     const size = 24 * state.dpr;
     // cluster on low zoom: group markers per 48px screen cell
@@ -183,7 +189,8 @@
           ctx.drawImage(img, px - 8 * state.dpr, pz - 30 * state.dpr, 16 * state.dpr, 32 * state.dpr);
         }
       } else {
-        img = imageFor(iconImages, m.icon, `/icons/${m.icon}.svg`);
+        img = imageFor(iconImages, m.icon, m.icon && m.icon.startsWith('custom:')
+            ? `/icons/c/${m.icon.slice(7)}.png` : `/icons/${m.icon}.svg`);
         if (img.complete && img.naturalWidth > 0) {
           ctx.drawImage(img, px - size / 2, pz - size / 2, size, size);
         }
@@ -555,13 +562,14 @@
         }
         if (layer.id === "markers" && layers.markers === undefined) layers.markers = layer.defaultVisible;
         if (layer.id === "banner-markers" && layers.banners === undefined) layers.banners = layer.defaultVisible;
+        if (layer.id === "waystones" && layers.waystones === undefined) layers.waystones = layer.defaultVisible;
         if (layer.id === "players") {
           if (layers.players === undefined) layers.players = layer.defaultVisible;
           if (layers.names === undefined) layers.names = layer.showNames !== false;
         }
       }
     } catch (e) { /* defaults stay */ }
-    for (const key of ["claims", "markers", "banners", "players", "names"]) {
+    for (const key of ["claims", "markers", "banners", "waystones", "players", "names"]) {
       if (layers[key] === undefined) layers[key] = true;
     }
     syncLayerPanel();
@@ -582,6 +590,7 @@
     bind("layer-claims", "claims", () => fetchOverlay("claims"));
     bind("layer-markers", "markers", () => fetchOverlay("markers"));
     bind("layer-banners", "banners", () => fetchOverlay("markers"));
+    bind("layer-waystones", "waystones", () => fetchOverlay("waystones"));
     bind("layer-players", "players");
     bind("layer-names", "names");
   }

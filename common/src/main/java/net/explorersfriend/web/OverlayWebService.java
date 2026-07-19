@@ -4,11 +4,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.explorersfriend.claims.MapClaim;
 import net.explorersfriend.config.MapConfig;
+import net.explorersfriend.marker.CustomIconStore;
 import net.explorersfriend.marker.IconLibrary;
 import net.explorersfriend.marker.MarkerStore;
 import net.explorersfriend.overlay.OverlayItem;
 import net.explorersfriend.overlay.OverlayLayer;
 import net.explorersfriend.player.PlayerLayer;
+import net.explorersfriend.waystone.WaystonePoint;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +53,7 @@ public final class OverlayWebService {
     private static final Pattern BANNER_ICON = Pattern.compile("/api/v1/banner-icons/([0-9a-f]{16})\\.png");
     private static final Pattern HEAD = Pattern.compile("/api/v1/heads/([0-9a-fA-F-]{32,36})\\.png");
     private static final Pattern ICON = Pattern.compile("/icons/([a-z0-9_]{1,32})\\.svg");
+    private static final Pattern CUSTOM_ICON = Pattern.compile("/icons/c/([a-z0-9_-]{1,32})\\.png");
     private static final int MAX_BBOX_SPAN = 1 << 24;
 
     private final MapConfig config;
@@ -64,6 +67,8 @@ public final class OverlayWebService {
     private final Supplier<byte[]> statusJson;
     private final Supplier<String> metricsText;
     private final List<String> claimProviderIds;
+    private final CustomIconStore customIcons;   // null = no custom icons (tests)
+    private final OverlayLayer<WaystonePoint> waystonesLayer;   // null = Waystones mod absent
     private final Map<String, byte[]> iconSvgs = new HashMap<>();
 
     public OverlayWebService(MapConfig config,
@@ -76,7 +81,9 @@ public final class OverlayWebService {
                              Supplier<byte[]> worldsJson,
                              Supplier<byte[]> statusJson,
                              Supplier<String> metricsText,
-                             List<String> claimProviderIds) {
+                             List<String> claimProviderIds,
+                             CustomIconStore customIcons,
+                             OverlayLayer<WaystonePoint> waystonesLayer) {
         this.config = config;
         this.knownSlugs = knownSlugs;
         this.claimsLayer = claimsLayer;
@@ -88,6 +95,8 @@ public final class OverlayWebService {
         this.statusJson = statusJson;
         this.metricsText = metricsText;
         this.claimProviderIds = claimProviderIds;
+        this.customIcons = customIcons;
+        this.waystonesLayer = waystonesLayer;
         for (String icon : IconLibrary.ICONS) {
             try (InputStream in = OverlayWebService.class.getClassLoader()
                     .getResourceAsStream(IconLibrary.resourcePath(icon))) {
@@ -115,6 +124,7 @@ public final class OverlayWebService {
             case "/api/v1/claims" -> layerResponse("claims", claimsLayer, query, ifNoneMatch,
                     config.claims().maxClaimsPerResponse());
             case "/api/v1/markers" -> layerResponse("markers", markersLayer, query, ifNoneMatch, 10_000);
+            case "/api/v1/waystones" -> layerResponse("waystones", waystonesLayer, query, ifNoneMatch, 10_000);
             case "/api/v1/icons" -> icons();
             case "/metrics" -> config.web().metricsEnabled()
                     ? new Response(200, "text/plain; version=0.0.4; charset=utf-8",
@@ -125,6 +135,15 @@ public final class OverlayWebService {
     }
 
     private Response patternRoutes(String path, String ifNoneMatch) {
+        Matcher customIcon = CUSTOM_ICON.matcher(path);
+        if (customIcon.matches()) {
+            CustomIconStore.Entry entry = customIcons == null ? null
+                    : customIcons.get(customIcon.group(1));
+            if (entry == null) {
+                return Response.error(404, "unknown custom icon");
+            }
+            return new Response(200, "image/png", entry.png(), "max-age=300", null, false);
+        }
         Matcher banner = BANNER_ICON.matcher(path);
         if (banner.matches()) {
             byte[] png = bannerIconResolver.apply(banner.group(1));
@@ -172,6 +191,12 @@ public final class OverlayWebService {
             banners.addProperty("defaultVisible", config.markers().bannersDefaultVisibleInUi());
             layers.add(banners);
         }
+        if (waystonesLayer != null) {
+            JsonObject waystones = new JsonObject();
+            waystones.addProperty("id", "waystones");
+            waystones.addProperty("defaultVisible", config.waystones().defaultVisibleInUi());
+            layers.add(waystones);
+        }
         if (players != null) {
             JsonObject playerLayer = new JsonObject();
             playerLayer.addProperty("id", "players");
@@ -189,6 +214,9 @@ public final class OverlayWebService {
         JsonArray icons = new JsonArray();
         IconLibrary.ICONS.forEach(icons::add);
         root.add("icons", icons);
+        JsonArray custom = new JsonArray();
+        IconLibrary.customIcons().stream().sorted().forEach(custom::add);
+        root.add("custom", custom);
         return new Response(200, "application/json; charset=utf-8",
                 root.toString().getBytes(StandardCharsets.UTF_8), "max-age=3600", null, true);
     }

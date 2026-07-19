@@ -67,8 +67,9 @@ is one region, i.e. blocks `[x*512, x*512+511]` × `[z*512, z*512+511]`.
 
 Since 0.2.0 the overlay data additionally ships under the versioned `/api/v1/*`
 endpoints (`worlds`, `status`, `overlays`, `players`, `claims`, `markers`, `icons`,
-plus head/banner-icon PNGs) with ETag/revision-delta support, and an optional
-Prometheus `/metrics` endpoint. The unversioned `/api/*` endpoints above remain for
+`waystones` since 0.4.0, plus head/banner-icon PNGs and `/icons/c/<name>.png` for
+user-supplied custom icons since 0.4.0) with ETag/revision-delta support, and an
+optional Prometheus `/metrics` endpoint. The unversioned `/api/*` endpoints above remain for
 compatibility.
 
 ## Out of scope (planned, not implemented as of 0.3.0)

@@ -83,6 +83,8 @@ public final class ConfigIO {
         JsonObject blocks = obj(root, "blocks");
         JsonObject claims = obj(root, "claims");
         JsonObject markers = obj(root, "markers");
+        JsonObject waystones = obj(root, "waystones");
+        JsonObject customIcons = obj(markers, "custom-icons");
         JsonObject performance = obj(root, "performance");
 
         return new MapConfig(
@@ -174,7 +176,19 @@ public final class ConfigIO {
                         getBool(markers, "markers.show-creator", def.markers().showCreator(), warnings, "show-creator"),
                         getBool(markers, "markers.show-coordinates", def.markers().showCoordinates(), warnings, "show-coordinates"),
                         getStringList(markers, "disabled-worlds", "markers.disabled-worlds", def.markers().disabledWorlds(), warnings),
-                        getInt(markers, "save-interval-seconds", "markers.save-interval-seconds", def.markers().saveIntervalSeconds(), 5, 3600, warnings)),
+                        getInt(markers, "save-interval-seconds", "markers.save-interval-seconds", def.markers().saveIntervalSeconds(), 5, 3600, warnings),
+                        new MapConfig.CustomIcons(
+                                getBool(customIcons, "markers.custom-icons.enabled", def.markers().customIcons().enabled(), warnings, "enabled"),
+                                getInt(customIcons, "max-count", "markers.custom-icons.max-count", def.markers().customIcons().maxCount(), 0, 1024, warnings),
+                                getInt(customIcons, "max-edge-px", "markers.custom-icons.max-edge-px", def.markers().customIcons().maxEdgePx(), 16, 512, warnings),
+                                getInt(customIcons, "max-file-kib", "markers.custom-icons.max-file-kib", def.markers().customIcons().maxFileKiB(), 16, 4096, warnings))),
+                new MapConfig.Waystones(
+                        getBool(waystones, "waystones.enabled", def.waystones().enabled(), warnings),
+                        getBool(waystones, "waystones.only-global", def.waystones().onlyGlobal(), warnings, "only-global"),
+                        getBool(waystones, "waystones.show-owner", def.waystones().showOwner(), warnings, "show-owner"),
+                        getInt(waystones, "refresh-seconds", "waystones.refresh-seconds", def.waystones().refreshSeconds(), 5, 3600, warnings),
+                        getStringList(waystones, "disabled-worlds", "waystones.disabled-worlds", def.waystones().disabledWorlds(), warnings),
+                        getBool(waystones, "waystones.default-visible-in-ui", def.waystones().defaultVisibleInUi(), warnings, "default-visible-in-ui")),
                 new MapConfig.Performance(
                         getBool(performance, "performance.auto-throttle", def.performance().autoThrottle(), warnings, "auto-throttle"),
                         getInt(performance, "mspt-pause-threshold", "performance.mspt-pause-threshold", def.performance().msptPauseThreshold(), 20, 200, warnings),
@@ -501,7 +515,34 @@ public final class ConfigIO {
                     // Dimensions where markers are disabled.
                     "disabled-worlds": [],
                     // Batched save interval for marker changes (plus an immediate save on shutdown).
-                    "save-interval-seconds": 30
+                    "save-interval-seconds": 30,
+                    // User-supplied marker icons from config/explorersfriend/icons/.
+                    // PNG/JPEG only; files are re-encoded on load and referenced in marker
+                    // commands as custom:<filename-without-extension>.
+                    "custom-icons": {
+                      "enabled": true,
+                      // Maximum number of icons loaded (alphabetical; the rest is logged and skipped).
+                      "max-count": 64,
+                      // Maximum image width/height in pixels.
+                      "max-edge-px": 128,
+                      // Maximum file size per icon in KiB.
+                      "max-file-kib": 256
+                    }
+                  },
+                  // Waystones-mod integration: named waystones appear as their own map layer
+                  // (only active when the Waystones mod is installed; sharestones and
+                  // shard-bound waystones are never shown).
+                  "waystones": {
+                    "enabled": true,
+                    // true = only waystones with GLOBAL visibility appear on the map.
+                    "only-global": false,
+                    // Show the owner name in the tooltip.
+                    "show-owner": false,
+                    // How often the waystone list is refreshed (seconds).
+                    "refresh-seconds": 60,
+                    // Dimensions where the layer is disabled.
+                    "disabled-worlds": [],
+                    "default-visible-in-ui": true
                   },
                   "performance": {
                     // Pause backlog rendering automatically while the server is overloaded.

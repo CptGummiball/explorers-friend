@@ -24,7 +24,7 @@ public final class ClaimProviders {
     private ClaimProviders() {
     }
 
-    public static List<ClaimProvider> detect(MinecraftServer server, MapConfig.Claims config, Path configDir) {
+    public static List<ClaimProvider> detect(MinecraftServer server, MapConfig.Claims config, Path configDir, Path dataDir) {
         LOGGER.info("[ExplorersFriend/Claims] Detecting supported claim providers...");
         List<ClaimProvider> providers = new ArrayList<>();
         FabricLoader loader = FabricLoader.getInstance();
@@ -46,6 +46,17 @@ public final class ClaimProviders {
         LOGGER.info("[ExplorersFriend/Claims] GriefPrevention: unavailable on this platform "
                 + "(Bukkit/Paper plugin, no Fabric port - see docs/CLAIM_PROVIDERS.md; "
                 + "use the JSON import as a bridge)");
+
+        if (loader.isModLoaded("common-protection-api")) {
+            if (providerEnabled(config, "commonprotection")) {
+                providers.add(new net.explorersfriend.claims.provider.CommonProtectionClaimProvider(
+                        server, dataDir.resolve("protected-chunks.json")));
+                LOGGER.info("[ExplorersFriend/Claims] Common Protection API: detected "
+                        + "(chunk-sampled overlay; owners are not exposed by this API)");
+            } else {
+                LOGGER.info("[ExplorersFriend/Claims] Common Protection API: detected but disabled by config");
+            }
+        }
 
         Path importFile = configDir.resolve("claims-import.jsonc");
         if (providerEnabled(config, "jsonimport") && Files.isRegularFile(importFile)) {

@@ -72,13 +72,13 @@ toolchains still emit Java-21 bytecode for the 1.21.x artifacts (checked via
 
 ## Claim provider availability per target
 
-| Target | FTB Chunks | Open Parties and Claims | JSON import |
+| Target | FTB Chunks | Open Parties and Claims | Common Protection API | Waystones layer | JSON import |
 | --- | --- | --- | --- |
-| 1.21.1 | ✅ adapter | ✅ adapter | ✅ |
-| 1.21.2–1.21.8 (both jars) | – no Fabric build exists | ✅ (no OPAC release for 1.21.2/1.21.7 themselves) | ✅ |
-| 1.21.9–1.21.10 | – no Fabric build exists | ✅ | ✅ |
-| 1.21.11 | ⏳ FTB 2111 exists; adapter deferred (documented) | ✅ | ✅ |
-| 26.1/26.2 | – no Fabric build exists | ⏳ OPAC exists; adapter deferred (official-names port pending) | ✅ |
+| 1.21.1 | ✅ adapter | ✅ adapter | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
+| 1.21.2–1.21.8 (both jars) | – no Fabric build exists | ✅ (no OPAC release for 1.21.2/1.21.7 themselves) | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
+| 1.21.9–1.21.10 | – no Fabric build exists | ✅ | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
+| 1.21.11 | ✅ adapter (0.4.0) | ✅ | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
+| 26.1/26.2 | – no Fabric build exists | ✅ adapter (0.4.0) | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
 
 A missing external claim mod is never an error: detection logs it and the base map
 is fully functional everywhere.

@@ -50,7 +50,7 @@ public final class MarkerCommands {
     };
 
     private static final SuggestionProvider<CommandSourceStack> ICON_SUGGESTIONS = (context, builder) ->
-            SharedSuggestionProvider.suggest(IconLibrary.ICONS, builder);
+            SharedSuggestionProvider.suggest(IconLibrary.allIcons(), builder);
 
     public static void register() {
         CommandRegistrationCallback.EVENT.register(MarkerCommands::registerTree);
@@ -70,7 +70,7 @@ public final class MarkerCommands {
                                                 .executes(context -> add(context,
                                                         StringArgumentType.getString(context, "icon"))))))
                         .then(Commands.literal("add-at")
-                                .requires(source -> Perms.atLeast(source, 2))
+                                .requires(EfPermissions.require("explorersfriend.command.marker.add-at", 2))
                                 .then(Commands.argument("dimension",
                                                 net.minecraft.commands.arguments.DimensionArgument.dimension())
                                         .then(Commands.argument("x", IntegerArgumentType.integer(-30_000_000, 30_000_000))
@@ -109,7 +109,7 @@ public final class MarkerCommands {
                         .then(Commands.literal("categories").executes(MarkerCommands::categories))
                         .then(Commands.literal("icons").executes(MarkerCommands::icons))
                         .then(Commands.literal("teleport")
-                                .requires(source -> Perms.atLeast(source, 2))
+                                .requires(EfPermissions.require("explorersfriend.command.marker.teleport", 2))
                                 .then(markerArg().executes(MarkerCommands::teleport)))));
     }
 
@@ -122,7 +122,7 @@ public final class MarkerCommands {
     private static boolean mayCreate(CommandSourceStack source) {
         MapService service = MapService.get();
         boolean playerAllowed = service != null && service.config().markers().allowPlayerCreation();
-        return playerAllowed || Perms.atLeast(source, 2);
+        return playerAllowed || EfPermissions.check(source, "explorersfriend.command.marker.admin", 2);
     }
 
     private static MarkerStore store() {
@@ -149,7 +149,7 @@ public final class MarkerCommands {
     }
 
     private static boolean mayEdit(CommandContext<CommandSourceStack> context, MapMarker marker) {
-        if (Perms.atLeast(context.getSource(), 2)) {
+        if (EfPermissions.check(context.getSource(), "explorersfriend.command.marker.admin", 2)) {
             return true;
         }
         if (marker.isBanner()) {
@@ -340,7 +340,7 @@ public final class MarkerCommands {
     }
 
     private static int icons(CommandContext<CommandSourceStack> context) {
-        feedback(context, "Available icons: " + String.join(", ", IconLibrary.ICONS));
+        feedback(context, "Available icons: " + String.join(", ", IconLibrary.allIcons()));
         return 1;
     }
 

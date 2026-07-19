@@ -48,7 +48,7 @@ class MarkerStoreTest {
     @Test
     void limitsAreEnforced(@TempDir Path dir) {
         MapConfig.Markers config = new MapConfig.Markers(true, true, true, 2, 3, true, true,
-                true, false, true, List.of(), 30);
+                true, false, true, List.of(), 30, new MapConfig.CustomIcons(true, 64, 128, 256));
         MarkerStore store = store(dir, config);
         store.load();
         assertNull(store.add(marker("a1", "One", ALICE)));
