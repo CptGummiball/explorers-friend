@@ -92,3 +92,7 @@ a live HTTP server on an ephemeral port.
    `python scripts/negative_smoke.py`.
 4. Upload all seven jars from `dist/`. On Modrinth, set each jar's game versions to
    exactly the Minecraft range in its file name.
+
+> **Versioning since 2026-07-19:** build numbers come from the X.Y.Z
+> build-attempt scheme - never edit `mod_version` by hand; use
+> `python scripts/efver.py` (claim/build/bump). Full rules: [VERSIONING.md](VERSIONING.md).

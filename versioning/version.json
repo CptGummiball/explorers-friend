@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "x": 0,
+  "y": 4,
+  "z": 0,
+  "lastResult": "none",
+  "updatedAt": "2026-07-19T16:09:44+00:00",
+  "note": "Adopted with docs/VERSIONING.md. Legacy versions (0.1.0/0.2.0/0.2.1/0.3.0 and every build before adoption) are frozen and outside this scheme."
+}

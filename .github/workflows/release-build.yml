@@ -1,0 +1,102 @@
+name: Release build (efver)
+
+# Publishable builds only - claims a build number per docs/VERSIONING.md,
+# builds every artifact, reports the result back into versioning/.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Bump before building"
+        type: choice
+        options: [none, sub, release]
+        default: none
+
+# One release build at a time - the claim/report commits below are the
+# second line of defense (git's atomic push rejects a racing claim).
+concurrency:
+  group: release-build
+  cancel-in-progress: false
+
+jobs:
+  release-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up JDK 21 + 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "efver-bot"
+          git config user.email "actions@github.com"
+
+      - name: Optional bump
+        if: inputs.bump != 'none'
+        run: |
+          if [ "${{ inputs.bump }}" = "release" ]; then
+            python scripts/efver.py bump-release
+          else
+            python scripts/efver.py bump-sub
+          fi
+
+      - name: Claim build number (push = reservation)
+        id: claim
+        run: |
+          for attempt in 1 2 3; do
+            VERSION=$(python scripts/efver.py claim | tail -1)
+            git add versioning gradle.properties
+            git commit -m "ci: claim build $VERSION [skip ci]"
+            if git push origin main; then
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            # lost a race: someone else claimed - rebase and take the next number
+            git reset --hard HEAD~1
+            git pull --rebase origin main
+            python scripts/efver.py report failure || true
+          done
+          echo "could not reserve a build number" >&2
+          exit 1
+
+      - name: Build all artifacts
+        id: build
+        run: ./gradlew clean buildAllVersions testAllVersions packageAllVersions verifyAllArtifacts --no-daemon --stacktrace
+
+      - name: Report result
+        if: always() && steps.claim.outcome == 'success'
+        run: |
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            python scripts/efver.py report success
+            MSG="ci: build ${{ steps.claim.outputs.version }} succeeded [skip ci]"
+          else
+            python scripts/efver.py report failure
+            MSG="ci: build ${{ steps.claim.outputs.version }} failed - number burned [skip ci]"
+          fi
+          git add versioning
+          git commit -m "$MSG"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Upload artifacts
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: explorersfriend-${{ steps.claim.outputs.version }}
+          path: |
+            dist/*.jar
+            dist/checksums-sha256.txt
+            dist/release-manifest.json
+            dist/compatibility.json
+          if-no-files-found: error
