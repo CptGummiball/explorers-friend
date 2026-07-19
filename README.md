@@ -123,6 +123,12 @@ No other personal data is exposed. See
 - [Troubleshooting](docs/TROUBLESHOOTING.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)
 - [Changelog](CHANGELOG.md)
 
+## Issues
+Issues are processed every Wednesday.
+
+[CREATE ISSUE](https://github.com/CptGummiball/explorers-friend/issues)
+
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
