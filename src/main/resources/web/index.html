@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="robots" content="noindex">
+  <title>The Explorer's Friend</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <canvas id="map"></canvas>
+  <header id="topbar">
+    <span id="title">The Explorer's Friend</span>
+    <select id="world" title="Dimension"></select>
+    <span id="coords" title="Cursor position">0, 0</span>
+    <button id="linkBtn" title="Copy link to this view">Share</button>
+    <span id="status"></span>
+  </header>
+  <button id="layersBtn" title="Layers">Layers</button>
+  <div id="layersPanel" hidden>
+    <strong>Layers</strong>
+    <label><input type="checkbox" id="layer-claims"> Claims</label>
+    <label><input type="checkbox" id="layer-markers"> Markers</label>
+    <label><input type="checkbox" id="layer-banners"> Banner markers</label>
+    <label><input type="checkbox" id="layer-players"> Players</label>
+    <label class="sub"><input type="checkbox" id="layer-names"> Player names</label>
+  </div>
+  <div id="tooltip" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>
