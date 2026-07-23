@@ -26,7 +26,15 @@ JAVA = {
     "21": r"C:\Program Files\Java\jdk-21",
     "25": r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot",
 }
-VER = "0.4.0-dev"
+def _mod_version():
+    props = os.path.join(ROOT, "gradle.properties")
+    for line in io.open(props, encoding="utf-8"):
+        if line.startswith("mod_version="):
+            return line.split("=", 1)[1].strip()
+    raise SystemExit("mod_version not found in gradle.properties")
+
+
+VER = _mod_version()
 
 CASES = {
     "a": dict(mc="1.21.1", java="21", jar=f"explorersfriend-fabric-1.21.1-{VER}.jar",

@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased (0.4.0-dev)
+## 0.4.3 — 2026-07-19
 
-In development - not released. Ships together with fixes for incoming GitHub issues.
+First release under the X.Y.Z build-attempt versioning scheme (docs/VERSIONING.md):
+build attempts 0.4.1 and 0.4.2 failed release verification and their numbers are
+burned; 0.4.3 is the first successful build and therefore the released version.
 
 ### Added
 - **Custom marker icons**: drop PNG/JPEG files into `config/explorersfriend/icons/`
