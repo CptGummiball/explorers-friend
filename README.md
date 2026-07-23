@@ -69,19 +69,24 @@ an interrupted render continues automatically on the next start.
 
 ## Overlays: claims, players, markers, waystones
 
-Three independent overlay layers ship with the map — all separate from the rendered
+Four independent overlay layers ship with the map — all separate from the rendered
 tiles, individually toggleable in the web UI (state persists in the browser):
 
-- **Claims** — auto-detected integrations for FTB Chunks and Open Parties and Claims
-  (official APIs; nothing bundled), plus a JSON import file for everything else.
-  Semi-transparent fills, opaque borders, provider/team colors, hover details.
-  See [docs/CLAIM_PROVIDERS.md](docs/CLAIM_PROVIDERS.md).
+- **Claims** — auto-detected integrations for FTB Chunks, Open Parties and Claims
+  and GOML/Common Protection API (Fabric/Quilt/NeoForge) and **GriefPrevention**
+  (Spigot/Paper) — official APIs, nothing bundled — plus a JSON import file for
+  everything else. Semi-transparent fills, opaque borders, provider/team colors,
+  hover details. See [docs/CLAIM_PROVIDERS.md](docs/CLAIM_PROVIDERS.md).
 - **Players** — live positions with real skin heads (cached, privacy-hardened),
   vanish-aware via the `PlayerVisibilityProvider` API, optional position delay,
   rounding and name anonymization.
 - **Markers** — persistent markers via `/efmap marker ...` with a built-in icon
-  library, plus **banner markers**: rename a banner in an anvil and place it — it
-  appears on the map with its actual pattern; breaking it removes it.
+  library and user-supplied custom icons, plus **banner markers**: rename a banner
+  in an anvil and place it — it appears on the map with its actual pattern;
+  breaking it removes it.
+- **Waystones** — with the Waystones mod installed (Fabric/Quilt/NeoForge), named
+  waystones appear as their own toggleable layer; sharestones and shard-bound
+  waystones stay private, owner display is opt-in.
 
 ## Commands (`/efmap`)
 

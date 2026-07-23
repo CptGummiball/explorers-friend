@@ -31,10 +31,12 @@ MSPT-based auto-throttle pauses background rendering while the server is busy.
   **Open Parties and Claims** (official APIs, nothing bundled) plus a JSON import
   bridge for other systems — semi-transparent fills, team colors, hover details
 - **Live players** with real skin heads (cached, privacy-hardened, vanish-API)
-- **Markers** via `/efmap marker ...` with a built-in icon library, plus
-  **banner markers**: rename a banner in an anvil and place it — it appears on the
-  map with its actual pattern; breaking it removes it
-- Layer panel in the web UI (claims / markers / banners / players), state persists
+- **Markers** via `/efmap marker ...` with a built-in icon library and
+  user-supplied custom icons, plus **banner markers**: rename a banner in an anvil
+  and place it — it appears on the map with its actual pattern; breaking it removes it
+- **Waystones layer** (Fabric/Quilt/NeoForge, with the Waystones mod): named
+  waystones as their own toggleable layer — sharestones stay private
+- Layer panel in the web UI (claims / markers / banners / waystones / players), state persists
   in the browser
 
 🔒 **Safe and private by default.** Binds to `127.0.0.1` until you decide otherwise
