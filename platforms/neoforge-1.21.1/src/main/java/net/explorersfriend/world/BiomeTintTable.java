@@ -47,7 +47,7 @@ public final class BiomeTintTable {
             int rawId = registry.getId(biome);
             ResourceLocation id = registry.getKey(biome);
             float temperature = biome.getBaseTemperature();
-            float downfall = biome.climateSettings.downfall();
+            float downfall = biome.getModifiedClimateSettings().downfall();
             BiomeSpecialEffects effects = biome.getSpecialEffects();
 
             int grassColor = effects.getGrassColorOverride()

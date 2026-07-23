@@ -60,6 +60,7 @@ final class SpigotColorPipeline {
                          String mcVersion, MapConfig config, Path cacheDir,
                          Path overridesFile, ExecutorService scanPool) {
         long startNanos = System.nanoTime();
+        Log.LOGGER.info("[ExplorersFriend/Scanner] Server jar source: {}", serverJar);
         List<JarInventoryScanner.PlainJar> jars = new ArrayList<>();
         if (serverJar != null) {
             jars.add(new JarInventoryScanner.PlainJar("server", mcVersion, serverJar));

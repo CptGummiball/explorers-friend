@@ -115,14 +115,21 @@ def main():
     ap.add_argument("--web", type=int, default=8191)
     ap.add_argument("--rcon", type=int, default=25691)
     ap.add_argument("--game", type=int, default=25631)
+    ap.add_argument("--server-jar", default=None,
+                    help="use a local server jar (e.g. BuildTools Spigot) instead of downloading Paper")
+    ap.add_argument("--label", default="spigot-paper")
     args = ap.parse_args()
 
-    work = os.path.join(TEMP, "ef-paper", args.mc)
+    work = os.path.join(TEMP, "ef-paper", args.label + "-" + args.mc)
     if os.path.exists(work):
         shutil.rmtree(work)
     os.makedirs(os.path.join(work, "plugins", "ExplorersFriend"))
-    print(f"[smoke] paper {args.mc}: downloading server...")
-    download(paper_jar_url(args.mc), os.path.join(work, "paper.jar"))
+    if args.server_jar:
+        print(f"[smoke] using local server jar: {args.server_jar}")
+        shutil.copy(args.server_jar, os.path.join(work, "paper.jar"))
+    else:
+        print(f"[smoke] paper {args.mc}: downloading server...")
+        download(paper_jar_url(args.mc), os.path.join(work, "paper.jar"))
     shutil.copy(args.jar, os.path.join(work, "plugins", os.path.basename(args.jar)))
     try:
         gp = fetch_json("https://api.modrinth.com/v2/project/griefprevention/version")
@@ -216,11 +223,11 @@ def main():
     results = {}
     if os.path.exists(results_file):
         results = json.load(io.open(results_file, encoding="utf-8"))
-    results.setdefault("spigot-paper", {"versions": {}})
-    results["spigot-paper"]["versions"][args.mc] = {
+    results.setdefault(args.label, {"versions": {}})
+    results[args.label]["versions"][args.mc] = {
         "smoke": "passed" if passed else "failed", "checks": {k: "ok" if v else "fail" for k, v in checks.items()}}
-    results["spigot-paper"]["smoke"] = "passed" if all(
-        v.get("smoke") == "passed" for v in results["spigot-paper"]["versions"].values()) else "failed"
+    results[args.label]["smoke"] = "passed" if all(
+        v.get("smoke") == "passed" for v in results[args.label]["versions"].values()) else "failed"
     io.open(results_file, "w", encoding="utf-8").write(json.dumps(results, indent=2))
     sys.exit(0 if passed else 1)
 
