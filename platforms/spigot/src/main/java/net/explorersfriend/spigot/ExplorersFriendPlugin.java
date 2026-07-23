@@ -404,8 +404,9 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
     }
 
     private static Path serverJarPath() {
-        // Paperclip keeps the unmodified vanilla server jar (with worldgen data)
-        // under cache/mojang_<version>.jar; prefer it, fall back to the code source.
+        // Candidates in order: Paperclip's pristine vanilla jar (cache/mojang_*.jar),
+        // Spigot's bundler server jar (bundler/versions/*.jar - the Bukkit code source
+        // points at the API library there, not the server), then the code source.
         try {
             Path cache = Path.of("cache");
             if (java.nio.file.Files.isDirectory(cache)) {
@@ -421,6 +422,19 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
             }
         } catch (Exception e) {
             Log.LOGGER.debug("[ExplorersFriend/Scanner] No paperclip cache jar: {}", e.toString());
+        }
+        try {
+            Path bundlerVersions = Path.of("bundler", "versions");
+            if (java.nio.file.Files.isDirectory(bundlerVersions)) {
+                try (var stream = java.nio.file.Files.list(bundlerVersions)) {
+                    var jar = stream.filter(f -> f.getFileName().toString().endsWith(".jar")).findFirst();
+                    if (jar.isPresent()) {
+                        return jar.get();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.LOGGER.debug("[ExplorersFriend/Scanner] No spigot bundler jar: {}", e.toString());
         }
         try {
             return Path.of(Bukkit.class.getProtectionDomain().getCodeSource()
