@@ -5,19 +5,32 @@ import com.google.gson.JsonObject;
 import net.explorersfriend.config.ConfigIO;
 import net.explorersfriend.config.MapConfig;
 import net.explorersfriend.platform.PlatformInfo;
+import net.explorersfriend.region.RegionChunkExtractor;
+import net.explorersfriend.render.DimensionContext;
+import net.explorersfriend.render.FullRenderManager;
+import net.explorersfriend.render.RenderScheduler;
+import net.explorersfriend.render.RenderedChunksIndex;
+import net.explorersfriend.render.TileRenderer;
 import net.explorersfriend.render.TileStore;
+import net.explorersfriend.util.NamedThreadFactory;
 import net.explorersfriend.util.Log;
 import net.explorersfriend.web.MapHttpServer;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.Locale;
 import java.util.Map;
 
@@ -39,6 +52,14 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
     private volatile Map<String, BukkitDimension> dimensions = Map.of();
     private volatile byte[] worldsJson = "{\"worlds\":[]}".getBytes(StandardCharsets.UTF_8);
     private final long startNanos = System.nanoTime();
+    private Path cacheDir;
+    private volatile Map<String, DimensionContext> contexts = Map.of();
+    private RenderedChunksIndex renderedIndex;
+    private RenderScheduler scheduler;
+    private FullRenderManager fullRender;
+    private ExecutorService scanPool;
+    private ScheduledExecutorService retryExecutor;
+    private volatile boolean ready;
 
     @Override
     public void onEnable() {
@@ -52,15 +73,36 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         dataDir = Bukkit.getWorldContainer().toPath().resolve(config.storage().dataDir());
         tileStore = new TileStore(dataDir.resolve("tiles"));
 
+        cacheDir = dataDir.resolve("cache");
         refreshDimensions();
         detectIntegrations();
         startWebServer();
+        scanPool = Executors.newFixedThreadPool(Math.max(1, config.scan().threads()),
+                new NamedThreadFactory("EF-Scan"));
+        retryExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("EF-Retry"));
+        Bukkit.getScheduler().runTaskAsynchronously(this, this::startPipelineAsync);
+        Bukkit.getScheduler().runTaskTimer(this, this::onTick, 20L, 1L);
         Log.LOGGER.info("[ExplorersFriend/Init] Spigot backend milestone 1 ready - {} world(s), web {}",
                 dimensions.size(), webServer == null ? "disabled" : "on port " + config.web().port());
     }
 
     @Override
     public void onDisable() {
+        if (fullRender != null) {
+            fullRender.persistAll();
+        }
+        if (scheduler != null) {
+            scheduler.close();
+        }
+        if (renderedIndex != null) {
+            renderedIndex.saveIfDirty();
+        }
+        if (scanPool != null) {
+            scanPool.shutdownNow();
+        }
+        if (retryExecutor != null) {
+            retryExecutor.shutdownNow();
+        }
         if (webServer != null) {
             webServer.close();
             webServer = null;
@@ -168,7 +210,90 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         }
     }
 
+    // --- render pipeline ----------------------------------------------------
+
+    private void startPipelineAsync() {
+        try {
+            Path serverJar = serverJarPath();
+            List<String> blockIds = new ArrayList<>();
+            for (Material material : Material.values()) {
+                if (material.isBlock() && !material.isLegacy()) {
+                    blockIds.add(material.getKey().toString());
+                }
+            }
+            blockIds.sort(java.util.Comparator.naturalOrder());
+            SpigotColorPipeline.ColorData colorData = SpigotColorPipeline.run(
+                    serverJar, getDataFolder().toPath().getParent(), blockIds,
+                    PlatformInfo.get().minecraftVersion(), config, cacheDir,
+                    getDataFolder().toPath().resolve("block-colors.jsonc"), scanPool);
+
+            Map<String, DimensionContext> built = new LinkedHashMap<>();
+            for (World world : Bukkit.getWorlds()) {
+                String id = dimensionId(world);
+                String slug = TileStore.dimensionSlug(id);
+                boolean hasCeiling = world.getEnvironment() == World.Environment.NETHER;
+                RegionChunkExtractor extractor = new RegionChunkExtractor(colorData.palette(),
+                        new RegionChunkExtractor.Settings(config.render().waterDepthShading(), hasCeiling));
+                built.put(slug, new DimensionContext(id, slug, regionDir(world), extractor));
+            }
+            contexts = built;
+
+            renderedIndex = RenderedChunksIndex.load(cacheDir.resolve("rendered-chunks.json"));
+            TileRenderer renderer = new TileRenderer(config.render().heightShading());
+            scheduler = new RenderScheduler(tileStore, renderer, renderedIndex,
+                    slug -> contexts.get(slug), retryExecutor,
+                    config.render().workers(), config.render().maxQueuedTiles(),
+                    config.render().zoomLevels());
+            fullRender = new FullRenderManager(scheduler, cacheDir.resolve("render-progress"),
+                    config.render().maxQueuedTiles(), config.logging().progressIntervalSeconds());
+            for (DimensionContext context : contexts.values()) {
+                fullRender.resumeIfPersisted(context);
+            }
+            ready = true;
+            Log.LOGGER.info("[ExplorersFriend/Init] Ready in {} ms - {} dimension(s): {}",
+                    (System.nanoTime() - startNanos) / 1_000_000, contexts.size(),
+                    String.join(", ", contexts.keySet()));
+        } catch (Exception e) {
+            Log.LOGGER.error("[ExplorersFriend/Init] Startup pipeline failed", e);
+        }
+    }
+
+    private void onTick() {
+        FullRenderManager render = fullRender;
+        if (render != null) {
+            render.feed();
+        }
+    }
+
+    private static Path serverJarPath() {
+        try {
+            return Path.of(Bukkit.class.getProtectionDomain().getCodeSource()
+                    .getLocation().toURI());
+        } catch (Exception e) {
+            Log.LOGGER.warn("[ExplorersFriend/Scanner] Cannot locate the server jar: {}", e.toString());
+            return null;
+        }
+    }
+
+    private static Path regionDir(World world) {
+        Path folder = world.getWorldFolder().toPath();
+        return switch (world.getEnvironment()) {
+            case NETHER -> folder.resolve("DIM-1").resolve("region");
+            case THE_END -> folder.resolve("DIM1").resolve("region");
+            default -> folder.resolve("region");
+        };
+    }
+
     // --- commands -----------------------------------------------------------
+
+    private String pauseResume(boolean pause) {
+        if (pause) {
+            scheduler.pause();
+            return "Rendering paused.";
+        }
+        scheduler.resume();
+        return "Rendering resumed.";
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -194,9 +319,51 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
                         : "Web server on " + config.web().bind() + ":" + config.web().port());
                 return true;
             }
+            case "render" -> {
+                if (!sender.hasPermission("explorersfriend.command.render")) {
+                    sender.sendMessage("Missing permission explorersfriend.command.render");
+                    return true;
+                }
+                if (!ready || fullRender == null) {
+                    sender.sendMessage("The map service is still starting.");
+                    return true;
+                }
+                String slug = args.length > 1 ? args[1] : contexts.keySet().stream().findFirst().orElse(null);
+                DimensionContext context = slug == null ? null : contexts.get(slug);
+                if (context == null) {
+                    sender.sendMessage("Unknown world. Known: " + String.join(", ", contexts.keySet()));
+                    return true;
+                }
+                World world = Bukkit.getWorlds().stream()
+                        .filter(w -> TileStore.dimensionSlug(dimensionId(w)).equals(context.slug()))
+                        .findFirst().orElse(null);
+                int centerX = world == null ? 0 : world.getSpawnLocation().getBlockX();
+                int centerZ = world == null ? 0 : world.getSpawnLocation().getBlockZ();
+                int radius = args.length > 2 ? Integer.parseInt(args[2]) : 0;
+                int tiles = fullRender.start(context, centerX, centerZ, radius);
+                sender.sendMessage("Full render of " + context.slug() + " started (" + tiles + " region tile(s) queued).");
+                return true;
+            }
+            case "pause" -> {
+                sender.sendMessage(scheduler != null ? pauseResume(true) : "Not ready.");
+                return true;
+            }
+            case "resume" -> {
+                sender.sendMessage(scheduler != null ? pauseResume(false) : "Not ready.");
+                return true;
+            }
+            case "cancel" -> {
+                if (fullRender == null) {
+                    sender.sendMessage("Not ready.");
+                    return true;
+                }
+                int cancelled = fullRender.cancel(args.length > 1 ? args[1] : null);
+                sender.sendMessage(cancelled + " queued tile(s) cancelled.");
+                return true;
+            }
             default -> {
-                sender.sendMessage("Milestone 1 supports: /efmap status, /efmap web "
-                        + "(render/markers/claims follow in the next milestones)");
+                sender.sendMessage("Available: /efmap status | render [world] [radius] | pause | resume "
+                        + "| cancel [world] | web (markers/claims follow in the next milestones)");
                 return true;
             }
         }
