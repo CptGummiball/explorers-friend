@@ -13,7 +13,11 @@ public final class Perms {
     }
 
     public static boolean atLeast(CommandSourceStack source, int level) {
-        return source.permissions() instanceof LevelBasedPermissionSet leveled
-                && leveled.level().ordinal() >= level;
+        var perms = source.permissions();
+        if (perms instanceof LevelBasedPermissionSet leveled) {
+            return leveled.level().ordinal() >= level;
+        }
+        // Console, RCON and functions carry ALL_PERMISSIONS (not level-based).
+        return perms == net.minecraft.server.permissions.PermissionSet.ALL_PERMISSIONS;
     }
 }

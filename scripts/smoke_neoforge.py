@@ -134,7 +134,7 @@ def main():
         checks["markersEndpoint"] = status == 200
         rcon(args.rcon, "efsmoke", "save-all flush")
         time.sleep(8)
-        out = rcon(args.rcon, "efsmoke", "efmap render minecraft_overworld 256")
+        out = rcon(args.rcon, "efsmoke", "efmap render minecraft:overworld 256")
         checks["renderCommand"] = "started" in out or "queued" in out
         tile_seen = False
         deadline = time.time() + 180

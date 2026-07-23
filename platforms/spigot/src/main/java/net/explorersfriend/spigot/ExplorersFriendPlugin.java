@@ -447,6 +447,18 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
 
     private static Path regionDir(World world) {
         Path folder = world.getWorldFolder().toPath();
+        // Since MC 26.x every dimension stores under dimensions/<ns>/<path>/region;
+        // older servers use the classic region / DIM-1 / DIM1 layout. Probe both.
+        String vanillaPath = switch (world.getEnvironment()) {
+            case NETHER -> "the_nether";
+            case THE_END -> "the_end";
+            default -> "overworld";
+        };
+        Path modern = folder.resolve("dimensions").resolve("minecraft")
+                .resolve(vanillaPath).resolve("region");
+        if (java.nio.file.Files.isDirectory(modern)) {
+            return modern;
+        }
         return switch (world.getEnvironment()) {
             case NETHER -> folder.resolve("DIM-1").resolve("region");
             case THE_END -> folder.resolve("DIM1").resolve("region");
