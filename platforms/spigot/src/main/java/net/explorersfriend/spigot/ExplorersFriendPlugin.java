@@ -10,7 +10,10 @@ import net.explorersfriend.config.MapConfig;
 import net.explorersfriend.marker.CustomIconStore;
 import net.explorersfriend.marker.MarkerStore;
 import net.explorersfriend.overlay.OverlayLayer;
+import net.explorersfriend.marker.IconLibrary;
+import net.explorersfriend.marker.MapMarker;
 import net.explorersfriend.web.OverlayWebService;
+import net.explorersfriend.world.DirtyTracker;
 import net.explorersfriend.platform.PlatformInfo;
 import net.explorersfriend.region.RegionChunkExtractor;
 import net.explorersfriend.render.DimensionContext;
@@ -27,6 +30,9 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -73,6 +79,8 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
     private CustomIconStore customIconStore;
     private ClaimManager claimManager;
     private SpigotPlayerService playerService;
+    private final DirtyTracker dirtyTracker = new DirtyTracker();
+    private volatile BukkitChunkExtractor liveExtractor;
 
     @Override
     public void onEnable() {
@@ -324,6 +332,11 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
                     config.render().zoomLevels());
             fullRender = new FullRenderManager(scheduler, cacheDir.resolve("render-progress"),
                     config.render().maxQueuedTiles(), config.logging().progressIntervalSeconds());
+            liveExtractor = new BukkitChunkExtractor(colorData.palette(),
+                    config.render().waterDepthShading());
+            Bukkit.getScheduler().runTask(this, () ->
+                    Bukkit.getPluginManager().registerEvents(new BlockChangeListener(), this));
+            Bukkit.getScheduler().runTaskTimer(this, this::drainDirtyChunks, 40L, 40L);
             for (DimensionContext context : contexts.values()) {
                 fullRender.resumeIfPersisted(context);
             }
@@ -427,6 +440,92 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         };
     }
 
+
+    // --- live block updates -------------------------------------------------
+
+    /** Marks chunks dirty on common world-change events; snapshots happen later. */
+    private final class BlockChangeListener implements Listener {
+
+        private void mark(org.bukkit.block.Block block) {
+            String slug = TileStore.dimensionSlug(dimensionId(block.getWorld()));
+            dirtyTracker.markDirty(slug, block.getX() >> 4, block.getZ() >> 4);
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onPlace(org.bukkit.event.block.BlockPlaceEvent event) {
+            mark(event.getBlock());
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onBreak(org.bukkit.event.block.BlockBreakEvent event) {
+            mark(event.getBlock());
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onBurn(org.bukkit.event.block.BlockBurnEvent event) {
+            mark(event.getBlock());
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onGrow(org.bukkit.event.block.BlockGrowEvent event) {
+            mark(event.getBlock());
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onFade(org.bukkit.event.block.BlockFadeEvent event) {
+            mark(event.getBlock());
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onBlockExplode(org.bukkit.event.block.BlockExplodeEvent event) {
+            event.blockList().forEach(this::mark);
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onEntityExplode(org.bukkit.event.entity.EntityExplodeEvent event) {
+            event.blockList().forEach(this::mark);
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onLiquid(org.bukkit.event.block.BlockFromToEvent event) {
+            mark(event.getToBlock());
+        }
+    }
+
+    /** Main-thread: snapshot ready dirty chunks; extraction + patch run on workers. */
+    private void drainDirtyChunks() {
+        BukkitChunkExtractor extractor = liveExtractor;
+        RenderScheduler sched = scheduler;
+        if (extractor == null || sched == null) {
+            return;
+        }
+        List<DirtyTracker.DirtyChunk> ready = dirtyTracker.drainReady(3000, 15000,
+                Math.max(1, config.render().maxSnapshotsPerTick()) * 4);
+        for (DirtyTracker.DirtyChunk dirty : ready) {
+            World world = null;
+            for (World candidate : Bukkit.getWorlds()) {
+                if (TileStore.dimensionSlug(dimensionId(candidate)).equals(dirty.dimensionSlug())) {
+                    world = candidate;
+                    break;
+                }
+            }
+            if (world == null || !world.isChunkLoaded(dirty.chunkX(), dirty.chunkZ())) {
+                continue;
+            }
+            org.bukkit.ChunkSnapshot snapshot = world.getChunkAt(dirty.chunkX(), dirty.chunkZ())
+                    .getChunkSnapshot(true, true, false);
+            int minY = world.getMinHeight();
+            String slug = dirty.dimensionSlug();
+            scanPool.submit(() -> {
+                try {
+                    sched.submitChunkPatch(slug, extractor.extract(snapshot, minY));
+                } catch (Exception e) {
+                    Log.LOGGER.debug("[ExplorersFriend/Renderer] Live patch failed: {}", e.toString());
+                }
+            });
+        }
+    }
+
     // --- commands -----------------------------------------------------------
 
     private String pauseResume(boolean pause) {
@@ -436,6 +535,78 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         }
         scheduler.resume();
         return "Rendering resumed.";
+    }
+
+
+    private boolean markerCommand(CommandSender sender, String[] args) {
+        if (markerStore == null || args.length < 2) {
+            sender.sendMessage("Usage: /efmap marker <add <name> [icon] | list | remove <name>>");
+            return true;
+        }
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "add" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("Only players can add markers at their position.");
+                    return true;
+                }
+                boolean allowed = config.markers().allowPlayerCreation()
+                        || sender.hasPermission("explorersfriend.command.marker.admin");
+                if (!allowed || !sender.hasPermission("explorersfriend.command.marker")) {
+                    sender.sendMessage("You may not create markers on this server.");
+                    return true;
+                }
+                if (args.length < 3) {
+                    sender.sendMessage("Usage: /efmap marker add <name> [icon]");
+                    return true;
+                }
+                String name = args[2];
+                String icon = args.length > 3 ? args[3] : IconLibrary.FALLBACK;
+                String slug = TileStore.dimensionSlug(dimensionId(player.getWorld()));
+                long now = System.currentTimeMillis();
+                MapMarker marker = new MapMarker(java.util.UUID.randomUUID().toString(), slug, name,
+                        IconLibrary.validateOrFallback(icon),
+                        player.getLocation().getBlockX(), player.getLocation().getBlockY(),
+                        player.getLocation().getBlockZ(),
+                        null, null, null, player.getUniqueId(), player.getName(),
+                        now, now, true, MapMarker.SOURCE_COMMAND, null);
+                String error = markerStore.add(marker);
+                sender.sendMessage(error != null ? error : "Marker '" + name + "' created.");
+                return true;
+            }
+            case "list" -> {
+                var items = markerStore.all();
+                sender.sendMessage(items.isEmpty() ? "No markers."
+                        : items.stream().limit(20).map(m -> m.name() + " (" + m.dimensionSlug()
+                                + " " + m.x() + "," + m.y() + "," + m.z() + ")")
+                                .reduce((a, b) -> a + "; " + b).orElse(""));
+                return true;
+            }
+            case "remove" -> {
+                if (args.length < 3) {
+                    sender.sendMessage("Usage: /efmap marker remove <name>");
+                    return true;
+                }
+                var resolved = markerStore.resolve(args[2]);
+                if (resolved.isEmpty()) {
+                    sender.sendMessage("No unique marker named '" + args[2] + "'.");
+                    return true;
+                }
+                MapMarker marker = resolved.get();
+                boolean own = sender instanceof Player player
+                        && player.getUniqueId().equals(marker.creator());
+                if (!own && !sender.hasPermission("explorersfriend.command.marker.admin")) {
+                    sender.sendMessage("You may only remove your own markers.");
+                    return true;
+                }
+                markerStore.remove(marker.id());
+                sender.sendMessage("Marker '" + marker.name() + "' removed.");
+                return true;
+            }
+            default -> {
+                sender.sendMessage("Usage: /efmap marker <add|list|remove>");
+                return true;
+            }
+        }
     }
 
     @Override
@@ -504,9 +675,12 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
                 sender.sendMessage(cancelled + " queued tile(s) cancelled.");
                 return true;
             }
+            case "marker" -> {
+                return markerCommand(sender, args);
+            }
             default -> {
                 sender.sendMessage("Available: /efmap status | render [world] [radius] | pause | resume "
-                        + "| cancel [world] | web (markers/claims follow in the next milestones)");
+                        + "| cancel [world] | web | marker <add|list|remove>");
                 return true;
             }
         }
