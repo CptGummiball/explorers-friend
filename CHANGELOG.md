@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — multi-platform expansion
+## 0.5.1 — 2026-07-24 (multi-platform expansion)
 
 - **New platforms**: NeoForge backend (1.21.1 + 26.2 modules, ModDevGradle,
   mixin + event-bus adapter, Waystones integration) and a **Spigot/Paper plugin**
@@ -14,7 +14,10 @@
   every platform.
 - Fixes found by cross-platform testing: 26.x console/RCON permissions (also
   affects 0.4.3 fabric 26.x jars), 26.x `dimensions/` world-storage layout.
-- Forge: deferred with documented rationale (MULTIPLATFORM.md §3a).
+- **NeoForge integrations**: FTB Chunks + Open Parties and Claims adapters on
+  neoforge-1.21.1 and OPAC on neoforge-26.2 (live-verified with the real mods:
+  detection, claims endpoint, render); Waystones layer was already active.
+- Forge: deferred with documented rationale (MULTIPLATFORM.md par.3a).
 - Docs: INSTALL.md (per-platform install), MULTIPLATFORM.md verified matrices.
 
 

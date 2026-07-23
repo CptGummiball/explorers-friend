@@ -5,3 +5,6 @@
 {"at": "2026-07-23T14:18:33+00:00", "event": "failure", "version": "0.4.2"}
 {"at": "2026-07-23T14:18:59+00:00", "event": "claim", "version": "0.4.3"}
 {"at": "2026-07-23T14:25:17+00:00", "event": "success", "version": "0.4.3"}
+{"at": "2026-07-23T22:42:42+00:00", "event": "bump-sub", "nextBuildWillBe": "0.5.1"}
+{"at": "2026-07-23T22:42:42+00:00", "event": "claim", "version": "0.5.1"}
+{"at": "2026-07-23T22:54:06+00:00", "event": "success", "version": "0.5.1"}

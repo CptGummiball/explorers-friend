@@ -156,11 +156,11 @@ will split families on all loaders).
 
 | Integration | Fabric | Quilt | NeoForge | Forge | Spigot/Paper |
 | --- | --- | --- | --- | --- | --- |
-| FTB Chunks | supported (1.21.1, 1.21.11) | same jar, planned test | planned (builds exist, e.g. 2101.1.20) | planned (builds exist) | platform incompatible |
-| Open Parties and Claims | supported (all) | same jar (upstream tags quilt) | planned (0.28.1 all versions) | planned (0.28.1) | platform incompatible |
+| FTB Chunks | supported (1.21.1, 1.21.11) | same jar | **supported (1.21.1, live-verified)** | deferred with Forge | platform incompatible |
+| Open Parties and Claims | supported (all) | same jar (upstream tags quilt) | **supported (1.21.1 + 26.2, live-verified)** | deferred with Forge | platform incompatible |
 | GriefPrevention | platform incompatible | platform incompatible | platform incompatible | platform incompatible | **planned: supported** (16.18.7, Spigot/Paper/Purpur, ≤26.1.2; 26.2 upstream pending) |
 | Common Protection API (GOML …) | supported | same jar | unavailable (Fabric-API based) | unavailable | platform incompatible |
-| Waystones layer | supported (all) | same jar | planned (Waystones ships neoforge builds) | planned | unavailable (mod content) |
+| Waystones layer | supported (all) | same jar | **supported (1.21.1 + 26.2, live-verified)** | deferred with Forge | unavailable (mod content) |
 | Permissions | fabric-permissions-api → LuckPerms | same | OP-fallback (+ evaluation) | OP-fallback (+ evaluation) | **Bukkit permissions native** |
 | Vanish | via PlayerVisibilityProvider API | same | same API | same API | Bukkit vanish metadata (planned) |
 
