@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "explorersfriend"
+version = "${version}"
+displayName = "The Explorer's Friend"
+description = "Fully server-side browser world map."
+
+[[mixins]]
+config = "explorersfriend.mixins.json"
+
+[[dependencies.explorersfriend]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,21.2)"
+ordering = "NONE"
+side = "SERVER"
+
+[[dependencies.explorersfriend]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "SERVER"
