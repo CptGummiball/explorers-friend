@@ -3,7 +3,14 @@ package net.explorersfriend.spigot;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.explorersfriend.config.ConfigIO;
+import net.explorersfriend.claims.ClaimManager;
+import net.explorersfriend.claims.ClaimProvider;
+import net.explorersfriend.claims.MapClaim;
 import net.explorersfriend.config.MapConfig;
+import net.explorersfriend.marker.CustomIconStore;
+import net.explorersfriend.marker.MarkerStore;
+import net.explorersfriend.overlay.OverlayLayer;
+import net.explorersfriend.web.OverlayWebService;
 import net.explorersfriend.platform.PlatformInfo;
 import net.explorersfriend.region.RegionChunkExtractor;
 import net.explorersfriend.render.DimensionContext;
@@ -60,6 +67,12 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
     private ExecutorService scanPool;
     private ScheduledExecutorService retryExecutor;
     private volatile boolean ready;
+    private OverlayLayer<MapClaim> claimsLayer;
+    private OverlayLayer<MarkerStore.Item> markersLayer;
+    private MarkerStore markerStore;
+    private CustomIconStore customIconStore;
+    private ClaimManager claimManager;
+    private SpigotPlayerService playerService;
 
     @Override
     public void onEnable() {
@@ -80,6 +93,7 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         scanPool = Executors.newFixedThreadPool(Math.max(1, config.scan().threads()),
                 new NamedThreadFactory("EF-Scan"));
         retryExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("EF-Retry"));
+        startOverlays();
         Bukkit.getScheduler().runTaskAsynchronously(this, this::startPipelineAsync);
         Bukkit.getScheduler().runTaskTimer(this, this::onTick, 20L, 1L);
         Log.LOGGER.info("[ExplorersFriend/Init] Spigot backend milestone 1 ready - {} world(s), web {}",
@@ -102,6 +116,9 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         }
         if (retryExecutor != null) {
             retryExecutor.shutdownNow();
+        }
+        if (markerStore != null) {
+            markerStore.saveIfDirty();
         }
         if (webServer != null) {
             webServer.close();
@@ -212,6 +229,62 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
             }
             return tileStore.tilePath(dimensionSlug, zoom, tileX, tileZ);
         }
+    }
+
+
+    // --- overlays (markers, claims, players, /api/v1) -----------------------
+
+    private void startOverlays() {
+        customIconStore = new CustomIconStore(getDataFolder().toPath().resolve("icons"));
+        customIconStore.reload(config.markers().customIcons());
+
+        markersLayer = new OverlayLayer<>("markers");
+        markerStore = new MarkerStore(dataDir.resolve("markers.json"), markersLayer, config.markers());
+        markerStore.load();
+        Bukkit.getScheduler().runTaskTimer(this,
+                () -> markerStore.saveIfDirty(),
+                config.markers().saveIntervalSeconds() * 20L,
+                config.markers().saveIntervalSeconds() * 20L);
+
+        claimsLayer = new OverlayLayer<>("claims");
+        List<ClaimProvider> providers = new ArrayList<>();
+        if (Bukkit.getPluginManager().getPlugin("GriefPrevention") != null
+                && providerEnabled("griefprevention")) {
+            providers.add(new GriefPreventionClaimProvider(this, ExplorersFriendPlugin::dimensionId));
+            Log.LOGGER.info("[ExplorersFriend/Claims] GriefPrevention: adapter active");
+        }
+        if (!providers.isEmpty() && config.claims().enabled()) {
+            claimManager = new ClaimManager(claimsLayer, providers, config.claims(),
+                    task -> Bukkit.getScheduler().runTask(this, task), scanPool,
+                    TileStore::dimensionSlug);
+            claimManager.start(retryExecutor);
+        }
+
+        if (config.players().show()) {
+            playerService = new SpigotPlayerService(config.players(), ExplorersFriendPlugin::dimensionId);
+            long interval = Math.max(1, config.players().updateIntervalSeconds()) * 20L;
+            Bukkit.getScheduler().runTaskTimer(this, playerService::sample, interval, interval);
+        }
+
+        if (webServer != null) {
+            webServer.setOverlayService(new OverlayWebService(config,
+                    () -> dimensions.keySet(),
+                    claimsLayer, markersLayer,
+                    playerService == null ? null : playerService.layer(),
+                    uuid -> playerService == null ? new byte[0] : playerService.headPng(uuid),
+                    hash -> null,
+                    () -> worldsJson,
+                    () -> new WebData().statusJson(),
+                    () -> "",
+                    claimManager == null ? List.of() : claimManager.providerIds(),
+                    customIconStore,
+                    null));
+        }
+    }
+
+    private boolean providerEnabled(String id) {
+        List<String> enabled = config.claims().enabledProviders();
+        return enabled.isEmpty() || enabled.contains("*") || enabled.contains(id);
     }
 
     // --- render pipeline ----------------------------------------------------

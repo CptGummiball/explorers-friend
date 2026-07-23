@@ -124,6 +124,13 @@ def main():
     print(f"[smoke] paper {args.mc}: downloading server...")
     download(paper_jar_url(args.mc), os.path.join(work, "paper.jar"))
     shutil.copy(args.jar, os.path.join(work, "plugins", os.path.basename(args.jar)))
+    try:
+        gp = fetch_json("https://api.modrinth.com/v2/project/griefprevention/version")
+        gp_url = next(v["files"][0]["url"] for v in gp if args.mc in v["game_versions"])
+        download(gp_url, os.path.join(work, "plugins", "GriefPrevention.jar"))
+        print("[smoke] plugin: GriefPrevention")
+    except Exception as e:
+        print(f"[smoke] WARN: no GriefPrevention for {args.mc}: {e}")
 
     io.open(os.path.join(work, "eula.txt"), "w").write("eula=true\n")
     io.open(os.path.join(work, "server.properties"), "w").write(
@@ -148,6 +155,15 @@ def main():
         checks["webStatus"] = status == 200 and b'"platform"' in body
         status, body = http_get(args.web, "/api/worlds")
         checks["webWorlds"] = status == 200 and b'"slug"' in body
+        checks["gpAdapterActive"] = "GriefPrevention: adapter active" in text
+        status, body = http_get(args.web, "/api/v1/claims?world=minecraft_overworld")
+        checks["claimsEndpoint"] = status == 200 and b"revision" in body
+        status, body = http_get(args.web, "/api/v1/players")
+        checks["playersEndpoint"] = status == 200
+        status, body = http_get(args.web, "/api/v1/markers?world=minecraft_overworld")
+        checks["markersEndpoint"] = status == 200 and b"revision" in body
+        status, body = http_get(args.web, "/api/v1/overlays")
+        checks["overlaysEndpoint"] = status == 200 and b"layers" in body
 
         rcon(args.rcon, "efsmoke", "save-all flush")
         time.sleep(8)

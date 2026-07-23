@@ -11,11 +11,16 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
         name = "SpigotMC"
     }
+    maven("https://api.modrinth.com/maven") {
+        name = "Modrinth"
+        content { includeGroup("maven.modrinth") }
+    }
 }
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
     compileOnly("org.slf4j:slf4j-api:2.0.9")
+    compileOnly("maven.modrinth:griefprevention:16.18.5") { isTransitive = false }
     implementation(project(":common"))
 }
 
