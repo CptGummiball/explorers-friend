@@ -29,10 +29,27 @@ public final class ClaimProviders {
         List<ClaimProvider> providers = new ArrayList<>();
         ModList loader = ModList.get();
 
-        LOGGER.info("[ExplorersFriend/Claims] FTB Chunks: no Fabric build exists for this "
-                + "Minecraft generation (adapter not included; see docs/CLAIM_PROVIDERS.md)");
+        if (loader.isLoaded("ftbchunks")) {
+            if (providerEnabled(config, "ftbchunks")) {
+                providers.add(new net.explorersfriend.claims.provider.FtbChunksClaimProvider(server));
+                LOGGER.info("[ExplorersFriend/Claims] FTB Chunks: detected");
+            } else {
+                LOGGER.info("[ExplorersFriend/Claims] FTB Chunks: detected but disabled by config");
+            }
+        } else {
+            LOGGER.info("[ExplorersFriend/Claims] FTB Chunks: not installed");
+        }
 
-        LOGGER.info("[ExplorersFriend/Claims] Open Parties and Claims: NeoForge build exists - adapter planned (see MULTIPLATFORM.md)");
+        if (loader.isLoaded("openpartiesandclaims")) {
+            if (providerEnabled(config, "openpartiesandclaims")) {
+                providers.add(new net.explorersfriend.claims.provider.OpacClaimProvider(server));
+                LOGGER.info("[ExplorersFriend/Claims] Open Parties and Claims: detected");
+            } else {
+                LOGGER.info("[ExplorersFriend/Claims] Open Parties and Claims: detected but disabled by config");
+            }
+        } else {
+            LOGGER.info("[ExplorersFriend/Claims] Open Parties and Claims: not installed");
+        }
 
         LOGGER.info("[ExplorersFriend/Claims] GriefPrevention: unavailable on this platform "
                 + "(Bukkit/Paper plugin, no Fabric port - see docs/CLAIM_PROVIDERS.md; "

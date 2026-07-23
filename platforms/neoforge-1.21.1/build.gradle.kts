@@ -13,6 +13,14 @@ neoForge {
 
 repositories {
     mavenCentral()
+    maven("https://maven.ftb.dev/releases") {
+        name = "FTB"
+        content { includeGroup("dev.ftb.mods") }
+    }
+    maven("https://maven.architectury.dev/") {
+        name = "Architectury"
+        content { includeGroup("dev.architectury") }
+    }
     maven("https://api.modrinth.com/maven") {
         name = "Modrinth"
         content { includeGroup("maven.modrinth") }
@@ -22,6 +30,11 @@ repositories {
 dependencies {
     implementation(project(":common"))
     compileOnly("maven.modrinth:waystones:21.1.37+neoforge-1.21.1") { isTransitive = false }
+    compileOnly("maven.modrinth:open-parties-and-claims:neoforge-1.21.1-0.28.1") { isTransitive = false }
+    compileOnly("dev.ftb.mods:ftb-chunks-neoforge:2101.1.20") { isTransitive = false }
+    compileOnly("dev.ftb.mods:ftb-teams-neoforge:2101.1.10") { isTransitive = false }
+    compileOnly("dev.ftb.mods:ftb-library-neoforge:2101.1.33") { isTransitive = false }
+    compileOnly("dev.architectury:architectury-neoforge:13.0.6") { isTransitive = false }
 }
 
 java {

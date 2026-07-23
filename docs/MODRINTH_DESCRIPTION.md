@@ -1,6 +1,7 @@
 # The Explorer's Friend
 
-**A lightweight, fully server-side browser world map for Fabric servers.**
+**A lightweight, fully server-side browser world map** for **Fabric, Quilt,
+NeoForge, Spigot and Paper** servers.
 
 Install one JAR on the server — players join with a completely vanilla client and open
 the live map in their browser. No client mod, no custom network protocol, nothing for
@@ -46,32 +47,38 @@ an optional Prometheus `/metrics` endpoint.
 
 ## Quick start
 
-1. Drop the JAR matching your Minecraft version (see the table below) +
-   [Fabric API](https://modrinth.com/mod/fabric-api) into `mods/`.
+1. Pick the file for your **platform and Minecraft version** (see below) and drop
+   it into `mods/` (Fabric/Quilt/NeoForge) or `plugins/` (Spigot/Paper).
+   Fabric/Quilt additionally need [Fabric API](https://modrinth.com/mod/fabric-api).
 2. Start the server → map at `http://localhost:8080/`.
 3. Render the already-explored world: `/efmap render minecraft:overworld`
+   (Spigot/Paper: `/efmap render minecraft_overworld`)
 
 On dedicated servers the first start downloads the vanilla client JAR once from
 Mojang's official servers (block textures are not in the server JAR; SHA-1-verified,
 cached, can be disabled).
 
-## Minimum requirements
+## Choosing your file
 
-Seven release files cover every stable Minecraft version from **1.21.1 to 26.2** —
-install exactly the one matching your server (each file lists its supported game
-versions):
+Every stable Minecraft version from **1.21.1 to 26.2** is covered. Install exactly
+**one** Explorer's Friend file matching your platform and version:
 
-| Minecraft | Java | Fabric Loader |
-| --- | ---: | --- |
-| 1.21.1 – 1.21.8 | 21 | ≥ 0.16 |
-| 1.21.9 – 1.21.10 | 21 | ≥ 0.17.0 |
-| 1.21.11 | 21 | ≥ 0.17.3 |
-| 26.1 – 26.2 | 25 | ≥ 0.19 |
+| Platform | File | Minecraft | Java |
+| --- | --- | --- | ---: |
+| **Fabric / Quilt** | `…-fabric-1.21.1` / `-1.21.2-1.21.4` / `-1.21.5-1.21.8` / `-1.21.9-1.21.10` / `-1.21.11` | as named | 21 |
+| **Fabric / Quilt** | `…-fabric-26.1` / `-26.2` | 26.1–26.2 | 25 |
+| **NeoForge** | `…-neoforge-1.21.1` / `…-neoforge-26.2` | 1.21.1 / 26.2 | 21 / 25 |
+| **Spigot / Paper / Purpur** | `…-spigot-paper` — **one file for all versions** | 1.21.1 – 26.x | 21 / 25 |
 
-- **Fabric API** is required on every version.
-- Optional integrations: FTB Chunks, Open Parties and Claims (availability differs
-  per Minecraft version — see the compatibility notes in the repository's
-  `docs/MULTIVERSION.md`; the JSON claim import works everywhere)
+Loader minimums (Fabric): ≥0.16 (1.21.1–1.21.8), ≥0.17.0 (1.21.9+), ≥0.17.3
+(1.21.11), ≥0.19 (26.x). **Fabric API** is required on Fabric/Quilt only.
+
+Optional integrations per platform:
+- Fabric/Quilt: FTB Chunks (1.21.1, 1.21.11), Open Parties and Claims (all),
+  GOML/Common Protection API, Waystones layer, LuckPerms permission nodes
+- NeoForge: FTB Chunks + Open Parties and Claims (1.21.1), OPAC (26.2), Waystones
+- Spigot/Paper: **GriefPrevention** claims
+- The JSON claim import works everywhere.
 
 ## Links
 

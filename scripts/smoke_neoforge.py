@@ -76,6 +76,7 @@ def main():
     ap.add_argument("--web", type=int, default=8197)
     ap.add_argument("--rcon", type=int, default=25697)
     ap.add_argument("--game", type=int, default=25637)
+    ap.add_argument("--integrations", action="store_true")
     args = ap.parse_args()
 
     work = os.path.join(TEMP, "ef-neoforge", args.mc)
@@ -92,6 +93,29 @@ def main():
                    check=True, capture_output=True, timeout=600)
 
     shutil.copy(args.jar, os.path.join(work, "mods", os.path.basename(args.jar)))
+    if args.integrations:
+        def modrinth_neoforge(slug):
+            data = json.load(urllib.request.urlopen(urllib.request.Request(
+                f"https://api.modrinth.com/v2/project/{slug}/version"
+                f"?game_versions=%5B%22{args.mc}%22%5D&loaders=%5B%22neoforge%22%5D", headers=UA)))
+            return data[0]["files"][0]["url"], data[0]["files"][0]["filename"]
+        for slug in ["open-parties-and-claims", "forge-config-api-port",
+                     "waystones", "balm", "architectury-api"]:
+            try:
+                url, fn = modrinth_neoforge(slug)
+                download(url, os.path.join(work, "mods", fn))
+                print(f"[smoke] mod: {fn}")
+            except Exception as e:
+                print(f"[smoke] WARN {slug}: {e}")
+        for gav, fn in [
+            ("dev/ftb/mods/ftb-chunks-neoforge/2101.1.20/ftb-chunks-neoforge-2101.1.20.jar", "ftb-chunks.jar"),
+            ("dev/ftb/mods/ftb-teams-neoforge/2101.1.10/ftb-teams-neoforge-2101.1.10.jar", "ftb-teams.jar"),
+            ("dev/ftb/mods/ftb-library-neoforge/2101.1.33/ftb-library-neoforge-2101.1.33.jar", "ftb-library.jar")]:
+            try:
+                download(f"https://maven.ftb.dev/releases/{gav}", os.path.join(work, "mods", fn))
+                print(f"[smoke] mod: {fn}")
+            except Exception as e:
+                print(f"[smoke] WARN {fn}: {e}")
     io.open(os.path.join(work, "eula.txt"), "w").write("eula=true\n")
     io.open(os.path.join(work, "server.properties"), "w").write(
         f"online-mode=false\nserver-port={args.game}\nenable-rcon=true\n"
@@ -132,6 +156,12 @@ def main():
         checks["webWorlds"] = status == 200 and b'"slug"' in body
         status, body = http_get(args.web, "/api/v1/markers?world=minecraft_overworld")
         checks["markersEndpoint"] = status == 200
+        if args.integrations:
+            checks["opacDetected"] = "Open Parties and Claims: detected" in text
+            checks["ftbDetected"] = "FTB Chunks: detected" in text
+            checks["waystonesDetected"] = "Waystones detected" in text
+            status, body = http_get(args.web, "/api/v1/claims?world=minecraft_overworld")
+            checks["claimsEndpoint"] = status == 200
         rcon(args.rcon, "efsmoke", "save-all flush")
         time.sleep(8)
         out = rcon(args.rcon, "efsmoke", "efmap render minecraft:overworld 256")

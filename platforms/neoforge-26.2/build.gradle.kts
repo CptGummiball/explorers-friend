@@ -22,6 +22,7 @@ repositories {
 dependencies {
     implementation(project(":common"))
     compileOnly("maven.modrinth:waystones:26.2.0.5+neoforge-26.2") { isTransitive = false }
+    compileOnly("maven.modrinth:open-parties-and-claims:neoforge-26.2-0.28.1") { isTransitive = false }
 }
 
 java {

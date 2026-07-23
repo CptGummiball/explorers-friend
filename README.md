@@ -1,6 +1,7 @@
 # The Explorer's Friend
 
-**A lightweight, fully server-side browser world map for Fabric servers.**
+**A lightweight, fully server-side browser world map for Minecraft servers** —
+Fabric, Quilt, NeoForge, Spigot and Paper from one shared core.
 Minecraft 1.21.1 – 26.2 · Fabric/Quilt · NeoForge · Spigot/Paper · Java 21 / 25
 
 The Explorer's Friend renders a live topographic map of your world and serves it as a
@@ -34,13 +35,16 @@ Seven artifacts cover every stable release from **1.21.1 to 26.2**. Pick the jar
 
 ## Installation (server)
 
-1. Install a [Fabric server](https://fabricmc.net/use/server/) for a supported
-   Minecraft version (1.21.1 – 26.2). The 1.21.x artifacts need Java 21, the 26.x
-   artifacts Java 25 — see [docs/MULTIVERSION.md](docs/MULTIVERSION.md).
-2. Drop the **`explorersfriend-fabric-<mc-range>-x.y.z.jar` matching your Minecraft
-   version** (exactly one variant) and **[Fabric API](https://modrinth.com/mod/fabric-api)**
-   into the `mods/` folder.
-3. Start the server. The map is available at **http://localhost:8080/** by default.
+Pick the artifact for your platform (full guide: [docs/INSTALL.md](docs/INSTALL.md)):
+
+| Platform | Artifact | Into | Also needs |
+| --- | --- | --- | --- |
+| **Fabric / Quilt** | `explorersfriend-fabric-<mc-range>-x.y.z.jar` | `mods/` | Fabric API |
+| **NeoForge** | `explorersfriend-neoforge-<mc>-x.y.z.jar` | `mods/` | — |
+| **Spigot / Paper** | `explorersfriend-spigot-paper-x.y.z.jar` (one jar, all versions) | `plugins/` | — |
+
+Install exactly **one** Explorer's Friend artifact. 1.21.x needs Java 21, 26.x
+needs Java 25. Start the server — the map is at **http://localhost:8080/**.
 
 On a dedicated server the first start downloads the official vanilla client JAR once
 from Mojang's servers (block textures are not part of the server JAR). This is
