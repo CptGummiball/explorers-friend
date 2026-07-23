@@ -74,8 +74,8 @@ tasks.register("packageAllVersions") {
                     "minecraft" to (p.findProperty("supportedMc") as String? ?: p.findProperty("mc") as String)
                         .split(",").map { it.trim() },
                     "java" to ((p.findProperty("javaVersion") as String? ?: "21").toInt()),
-                    "fabricLoader" to (p.findProperty("loaderVersion") as String),
-                    "fabricApi" to (p.findProperty("fabricApi") as String),
+                    "loader" to (p.findProperty("loaderVersion") as String? ?: "none"),
+                    "loaderApi" to (p.findProperty("fabricApi") as String? ?: "none"),
                     "sha256" to sha,
                     "tested" to (moduleMeta["smoke"] == "passed")
                 )
@@ -106,7 +106,7 @@ tasks.register("packageAllVersions") {
                         "minecraft" to mcVer,
                         "artifact" to a["file"],
                         "java" to a["java"],
-                        "fabricLoaderMin" to a["fabricLoader"],
+                        "loaderMin" to a["loader"],
                         "tested" to a["tested"]
                     )
                 }
@@ -128,12 +128,21 @@ tasks.register("verifyAllArtifacts") {
         jars.forEach { jarFile ->
             ZipFile(jarFile).use { zip ->
                 val fmj = zip.getEntry("fabric.mod.json")
-                    ?: error("${jarFile.name}: fabric.mod.json missing")
-                val json = groovy.json.JsonSlurper()
-                    .parse(zip.getInputStream(fmj).readBytes()) as Map<*, *>
-                val depends = json["depends"] as Map<*, *>
-                require((depends["minecraft"] as String).isNotBlank()) { "${jarFile.name}: empty minecraft range" }
-                require(json["version"] == modVersion) { "${jarFile.name}: wrong version ${json["version"]}" }
+                val pluginYml = zip.getEntry("plugin.yml")
+                require(fmj != null || pluginYml != null) {
+                    "${jarFile.name}: neither fabric.mod.json nor plugin.yml present"
+                }
+                if (fmj != null) {
+                    val json = groovy.json.JsonSlurper()
+                        .parse(zip.getInputStream(fmj).readBytes()) as Map<*, *>
+                    val depends = json["depends"] as Map<*, *>
+                    require((depends["minecraft"] as String).isNotBlank()) { "${jarFile.name}: empty minecraft range" }
+                    require(json["version"] == modVersion) { "${jarFile.name}: wrong version ${json["version"]}" }
+                } else {
+                    val yml = String(zip.getInputStream(pluginYml).readBytes())
+                    require(yml.contains("version: \"$modVersion\"")) { "${jarFile.name}: wrong plugin version" }
+                    require(yml.contains("main: net.explorersfriend.spigot")) { "${jarFile.name}: plugin main missing" }
+                }
                 require(zip.getEntry("net/explorersfriend/web/MapHttpServer.class") != null) {
                     "${jarFile.name}: common core classes missing"
                 }

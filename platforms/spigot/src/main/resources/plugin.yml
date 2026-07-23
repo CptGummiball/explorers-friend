@@ -1,0 +1,22 @@
+name: ExplorersFriend
+version: "${version}"
+main: net.explorersfriend.spigot.ExplorersFriendPlugin
+api-version: "1.21"
+description: Fully server-side browser world map (The Explorer's Friend).
+website: https://github.com/CptGummiball/explorers-friend
+softdepend: [GriefPrevention]
+commands:
+  efmap:
+    description: The Explorer's Friend map commands
+    usage: /efmap <status|render|update|pause|resume|cancel|reload|marker|scan|colors|cache|web>
+permissions:
+  explorersfriend.command.status:
+    default: op
+  explorersfriend.command.render:
+    default: op
+  explorersfriend.command.reload:
+    default: op
+  explorersfriend.command.marker:
+    default: true
+  explorersfriend.command.marker.admin:
+    default: op
