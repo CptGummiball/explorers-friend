@@ -25,6 +25,15 @@ public final class ExplorersFriend implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        String mcVersion = net.fabricmc.loader.api.FabricLoader.getInstance()
+                .getModContainer("minecraft").map(c -> c.getMetadata().getVersion().getFriendlyString())
+                .orElse("unknown");
+        boolean quilt = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("quilt_loader");
+        net.explorersfriend.platform.PlatformInfo.set(new net.explorersfriend.platform.PlatformInfo(
+                quilt ? "quilt" : "fabric", mcVersion, "fabric-1.21.2-1.21.4", net.fabricmc.loader.api.FabricLoader.getInstance()
+                        .getModContainer("explorersfriend")
+                        .map(c -> c.getMetadata().getVersion().getFriendlyString())
+                        .orElse("unknown")));
         String modVersion = FabricLoader.getInstance()
                 .getModContainer(MOD_ID)
                 .map(c -> c.getMetadata().getVersion().getFriendlyString())

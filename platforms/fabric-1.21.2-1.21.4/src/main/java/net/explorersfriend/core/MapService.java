@@ -928,6 +928,8 @@ public final class MapService {
     private byte[] buildStatusJson() {
         JsonObject root = new JsonObject();
         root.addProperty("name", ExplorersFriend.MOD_NAME);
+        root.addProperty("platform", net.explorersfriend.platform.PlatformInfo.get().platformId());
+        root.addProperty("minecraftVersion", net.explorersfriend.platform.PlatformInfo.get().minecraftVersion());
         root.addProperty("ready", ready);
         root.addProperty("readOnly", readOnly);
         root.addProperty("uptimeSeconds", (System.nanoTime() - startNanos) / 1_000_000_000L);
