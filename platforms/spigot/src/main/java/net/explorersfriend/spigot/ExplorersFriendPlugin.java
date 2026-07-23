@@ -116,7 +116,11 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         return switch (world.getEnvironment()) {
             case NETHER -> "minecraft:the_nether";
             case THE_END -> "minecraft:the_end";
-            default -> "minecraft:" + world.getName().toLowerCase(Locale.ROOT).replace(' ', '_');
+            // the main world maps to the vanilla overworld id so tiles/markers stay
+            // compatible across platforms; additional custom worlds keep their name
+            default -> world.equals(Bukkit.getWorlds().get(0))
+                    ? "minecraft:overworld"
+                    : "minecraft:" + world.getName().toLowerCase(Locale.ROOT).replace(' ', '_');
         };
     }
 
@@ -222,6 +226,7 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
                 }
             }
             blockIds.sort(java.util.Comparator.naturalOrder());
+            serverJar = unwrapBundler(serverJar, cacheDir);
             SpigotColorPipeline.ColorData colorData = SpigotColorPipeline.run(
                     serverJar, getDataFolder().toPath().getParent(), blockIds,
                     PlatformInfo.get().minecraftVersion(), config, cacheDir,
@@ -258,6 +263,53 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
         }
     }
 
+
+    /**
+     * Since 1.18 the vanilla server jar is a "bundler": the real game jar (with the
+     * worldgen data we need) sits inside META-INF/versions/. Extract it once into
+     * the cache and use it as the data source; plain jars pass through unchanged.
+     */
+    private static Path unwrapBundler(Path jar, Path cacheDir) {
+        if (jar == null) {
+            return null;
+        }
+        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(jar.toFile())) {
+            if (zip.getEntry("data/minecraft/worldgen/biome/plains.json") != null) {
+                return jar;
+            }
+            java.util.zip.ZipEntry inner = null;
+            var entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                var entry = entries.nextElement();
+                String name = entry.getName();
+                if (name.startsWith("META-INF/versions/") && name.endsWith(".jar")) {
+                    inner = entry;
+                    break;
+                }
+            }
+            if (inner == null) {
+                return jar;
+            }
+            Path target = cacheDir.resolve("server-data-"
+                    + inner.getName().substring(inner.getName().lastIndexOf('/') + 1));
+            if (!java.nio.file.Files.isRegularFile(target)
+                    || java.nio.file.Files.size(target) != inner.getSize()) {
+                java.nio.file.Files.createDirectories(cacheDir);
+                try (var in = zip.getInputStream(inner)) {
+                    java.nio.file.Files.copy(in, target,
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+                Log.LOGGER.info("[ExplorersFriend/Scanner] Extracted bundled server jar "
+                        + "for worldgen data ({})", target.getFileName());
+            }
+            return target;
+        } catch (java.io.IOException e) {
+            Log.LOGGER.warn("[ExplorersFriend/Scanner] Could not inspect server jar bundle: {}",
+                    e.toString());
+            return jar;
+        }
+    }
+
     private void onTick() {
         FullRenderManager render = fullRender;
         if (render != null) {
@@ -266,6 +318,24 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
     }
 
     private static Path serverJarPath() {
+        // Paperclip keeps the unmodified vanilla server jar (with worldgen data)
+        // under cache/mojang_<version>.jar; prefer it, fall back to the code source.
+        try {
+            Path cache = Path.of("cache");
+            if (java.nio.file.Files.isDirectory(cache)) {
+                try (var stream = java.nio.file.Files.list(cache)) {
+                    var mojang = stream
+                            .filter(f -> f.getFileName().toString().startsWith("mojang_")
+                                    && f.getFileName().toString().endsWith(".jar"))
+                            .findFirst();
+                    if (mojang.isPresent()) {
+                        return mojang.get();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.LOGGER.debug("[ExplorersFriend/Scanner] No paperclip cache jar: {}", e.toString());
+        }
         try {
             return Path.of(Bukkit.class.getProtectionDomain().getCodeSource()
                     .getLocation().toURI());
