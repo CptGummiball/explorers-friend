@@ -1,7 +1,7 @@
 # The Explorer's Friend
 
 **A lightweight, fully server-side browser world map for Fabric servers.**
-Minecraft 1.21.1 – 26.2 · Fabric · Java 21 / 25
+Minecraft 1.21.1 – 26.2 · Fabric/Quilt · NeoForge · Spigot/Paper · Java 21 / 25
 
 The Explorer's Friend renders a live topographic map of your world and serves it as a
 web page from an embedded HTTP server. It is built around three ideas:
@@ -20,6 +20,13 @@ web page from an embedded HTTP server. It is built around three ideas:
    access is limited to budgeted chunk snapshots (default ≤ 1.5 ms and ≤ 4 chunks per
    tick); full renders read region files from disk on worker threads without loading
    a single chunk. All queues are bounded with backpressure and job merging.
+
+## Supported platforms
+
+**Fabric** and **Quilt** (same jar), **NeoForge** (1.21.1, 26.2), and
+**Spigot/Paper** (one plugin jar for all supported versions, GriefPrevention
+integration). Per-platform install: [docs/INSTALL.md](docs/INSTALL.md);
+verified support matrix: [docs/MULTIPLATFORM.md](docs/MULTIPLATFORM.md).
 
 ## Supported Minecraft versions
 

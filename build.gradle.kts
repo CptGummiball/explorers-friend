@@ -129,8 +129,9 @@ tasks.register("verifyAllArtifacts") {
             ZipFile(jarFile).use { zip ->
                 val fmj = zip.getEntry("fabric.mod.json")
                 val pluginYml = zip.getEntry("plugin.yml")
-                require(fmj != null || pluginYml != null) {
-                    "${jarFile.name}: neither fabric.mod.json nor plugin.yml present"
+                val neoToml = zip.getEntry("META-INF/neoforge.mods.toml")
+                require(fmj != null || pluginYml != null || neoToml != null) {
+                    "${jarFile.name}: no platform metadata (fabric.mod.json/plugin.yml/neoforge.mods.toml)"
                 }
                 if (fmj != null) {
                     val json = groovy.json.JsonSlurper()
@@ -138,8 +139,12 @@ tasks.register("verifyAllArtifacts") {
                     val depends = json["depends"] as Map<*, *>
                     require((depends["minecraft"] as String).isNotBlank()) { "${jarFile.name}: empty minecraft range" }
                     require(json["version"] == modVersion) { "${jarFile.name}: wrong version ${json["version"]}" }
+                } else if (neoToml != null && pluginYml == null) {
+                    val toml = String(zip.getInputStream(neoToml).readBytes())
+                    require(toml.contains("modId = \"explorersfriend\"")) { "${jarFile.name}: mod id missing" }
+                    require(toml.contains("version = \"$modVersion\"")) { "${jarFile.name}: wrong version" }
                 } else {
-                    val yml = String(zip.getInputStream(pluginYml).readBytes())
+                    val yml = String(zip.getInputStream(pluginYml!!).readBytes())
                     require(yml.contains("version: \"$modVersion\"")) { "${jarFile.name}: wrong plugin version" }
                     require(yml.contains("main: net.explorersfriend.spigot")) { "${jarFile.name}: plugin main missing" }
                 }

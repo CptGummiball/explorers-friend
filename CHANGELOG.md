@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — multi-platform expansion
+
+- **New platforms**: NeoForge backend (1.21.1 + 26.2 modules, ModDevGradle,
+  mixin + event-bus adapter, Waystones integration) and a **Spigot/Paper plugin**
+  (one jar for every supported MC version, pure Bukkit API, no NMS: shared
+  region-file renderer, ChunkSnapshot live updates, Bukkit player layer with
+  profile-texture skin heads, marker commands, **GriefPrevention claim adapter**).
+- **Quilt officially supported** via the Fabric artifacts (runtime-verified on
+  1.21.1 and 26.2; platform reports as `quilt`).
+- Platform seam formalized (`PlatformInfo`, loader-free jar inventory, BlockInfo
+  map builder, worldgen-JSON biome tints); the web map and API are identical on
+  every platform.
+- Fixes found by cross-platform testing: 26.x console/RCON permissions (also
+  affects 0.4.3 fabric 26.x jars), 26.x `dimensions/` world-storage layout.
+- Forge: deferred with documented rationale (MULTIPLATFORM.md §3a).
+- Docs: INSTALL.md (per-platform install), MULTIPLATFORM.md verified matrices.
+
+
 ## 0.4.3 — 2026-07-19
 
 First release under the X.Y.Z build-attempt versioning scheme (docs/VERSIONING.md):

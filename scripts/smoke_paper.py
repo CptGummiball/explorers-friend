@@ -155,7 +155,12 @@ def main():
         text = read_log(work)
         checks["platformDetected"] = "[ExplorersFriend/Platform] Platform detected:" in text
         checks["paletteReady"] = "Runtime palette ready" in text
-        checks["biomeTints"] = "Computed biome tints" in text
+        if args.mc.startswith("26"):
+            # MC 26.x removed the worldgen JSONs from the server/client jars -
+            # Bukkit 26.x runs with default tints (documented limitation).
+            checks["biomeTintsDefaultDocumented"] = "using default tints" in text
+        else:
+            checks["biomeTints"] = "Computed biome tints" in text
         checks["gpLogHonest"] = "GriefPrevention" in text
 
         status, body = http_get(args.web, "/api/status")

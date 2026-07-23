@@ -1,10 +1,34 @@
 # Multi-platform feasibility analysis and architecture decision
 
-Phase A of the multi-platform expansion. Sources verified 2026-07-19 against
-meta.quiltmc.org, maven.neoforged.net, files.minecraftforge.net,
-fill.papermc.io, maven.ftb.dev and Modrinth. Status: **analysis complete,
-implementation in progress** — the support/test matrices below are the *plan*;
-only combinations listed in VERIFICATION.md as tested may be called supported.
+Sources verified 2026-07-19 against meta.quiltmc.org, maven.neoforged.net,
+files.minecraftforge.net, fill.papermc.io, maven.ftb.dev and Modrinth.
+Status: **implemented and runtime-verified** — every "tested" entry below names
+a real dedicated-server smoke run (dist/test-results.json).
+
+## 0. Verified support matrix (0.4.x multi-platform build)
+
+| Platform | Artifacts | Runtime-verified on | Result |
+| --- | --- | --- | --- |
+| Fabric | 7 family jars (1.21.1…26.2) | all 7 targets (0.4.3 release smoke) | ✅ |
+| Quilt | same 7 Fabric jars | Quilt Loader 0.30 on 1.21.1 and 26.2 (self-identifies as `quilt`) | ✅ |
+| NeoForge | `neoforge-1.21.1`, `neoforge-26.2` | NeoForge 21.1.243 and 26.2.0.32-beta incl. full render to tiles | ✅ |
+| Spigot | one `spigot-paper` jar (all MC versions) | BuildTools Spigot 1.21.1 (17/17) | ✅ |
+| Paper | same jar | Paper 1.21.1 (17/17, with GriefPrevention) and Paper 26.1.2 | ✅ |
+| Forge | — | — | deferred (see §3a) |
+
+Cross-platform negative tests 3/3: a NeoForge or Spigot jar in a Fabric
+`mods/`, or a Fabric jar on NeoForge, is cleanly ignored with the server
+staying healthy — wrong artifacts never half-load.
+
+Findings fixed during verification (both found by cross-platform smokes):
+- 26.x console/RCON permissions: the level-based shim denied ALL_PERMISSIONS
+  holders (affects the released 0.4.3 fabric 26.x jars; fixed for the next release).
+- MC 26.x moved world storage to `dimensions/<ns>/<path>/region` (all backends
+  handle both layouts now).
+
+Known limitation: MC 26.x removed the worldgen JSONs from the server/client
+jars, so **Bukkit 26.x runs with default biome tints** (grass/foliage/water
+uniform); Fabric/Quilt/NeoForge read tints from the registry and are unaffected.
 
 ## 1. Platform availability (verified, not guessed)
 
@@ -56,6 +80,17 @@ acceptance criteria:
 4. **Spigot**: Bukkit only loads the `plugin.yml` main class, so bundling is
    metadata-safe — but the Spigot backend shares no Minecraft-facing code with
    the loaders anyway (Bukkit API), so bundling buys nothing but risk.
+
+### 3a. Forge decision
+
+LexForge remains alive (builds through 26.2), but shipping it would mean a third
+full loader adapter tree with its own Gradle toolchain (FG), its own event/API
+surface diverging from NeoForge, and its own test matrix — while the 1.21+
+modded-server ecosystem has largely consolidated on NeoForge. Per the project
+rule that stability and maintainability outrank artifact count, **Forge is
+deferred**: not shipped, documented here, with the NeoForge modules as the
+direct porting template if demand materializes. This is the honest support
+decision for the platform, not an omission.
 
 **Chosen grouping (option 2 of the preference order — highest level that is
 honestly testable):**
