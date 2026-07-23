@@ -101,6 +101,11 @@ public final class JarInventoryScanner {
                         p.mod().getMetadata().getId(), p.location().key(), rootMessage(e));
             }
         }
+        return finish(records, cached);
+    }
+
+    /** Shared diff/statistics over freshly scanned records vs. the cached inventory. */
+    private static Result finish(List<JarRecord> records, Map<String, JarRecord> cached) {
         records.sort(Comparator.comparing(JarRecord::locationKey));
 
         int unchanged = 0;
@@ -142,6 +147,46 @@ public final class JarInventoryScanner {
         String jarSetHash = Hashes.sha256Hex(String.join("\n", hashes).getBytes(StandardCharsets.UTF_8));
 
         return new Result(List.copyOf(records), unchanged, added, changed, removed, duplicates, jarSetHash);
+    }
+
+
+    /** Neutral input for platforms without a mod loader (e.g. Spigot: server + plugin jars). */
+    public record PlainJar(String ownerId, String version, Path jar) {
+    }
+
+    /**
+     * Loader-free scan over an explicit jar list (used by the Spigot/Paper backend).
+     * Same caching, diff statistics and jar-set hash as the loader-driven scan.
+     */
+    public static Result scanJars(List<PlainJar> jars, Map<String, JarRecord> cached,
+                                  ExecutorService hashPool) {
+        List<Future<JarRecord>> futures = new ArrayList<>(jars.size());
+        for (PlainJar jar : jars) {
+            futures.add(hashPool.submit(() -> {
+                Path top = jar.jar();
+                String key = top.toAbsolutePath().toString();
+                String fileName = top.getFileName() == null ? top.toString() : top.getFileName().toString();
+                long size = Files.size(top);
+                long mtime = Files.getLastModifiedTime(top).toMillis();
+                JarRecord old = cached.get(key);
+                if (old != null && old.size() == size && old.mtime() == mtime) {
+                    return new JarRecord(key, jar.ownerId(), jar.version(), fileName, "", size, mtime, old.sha256());
+                }
+                return new JarRecord(key, jar.ownerId(), jar.version(), fileName, "", size, mtime,
+                        Hashes.sha256Hex(top));
+            }));
+        }
+        List<JarRecord> records = new ArrayList<>(futures.size());
+        for (int i = 0; i < futures.size(); i++) {
+            try {
+                records.add(futures.get(i).get());
+            } catch (Exception e) {
+                LOGGER.warn("[ExplorersFriend/Scanner] Could not inventory '{}': {}",
+                        jars.get(i).jar(), rootMessage(e));
+            }
+        }
+        records.sort(Comparator.comparing(JarRecord::locationKey));
+        return finish(records, cached);
     }
 
     private static Callable<JarRecord> toRecordTask(ModContainer mod, PhysicalLocation location,
