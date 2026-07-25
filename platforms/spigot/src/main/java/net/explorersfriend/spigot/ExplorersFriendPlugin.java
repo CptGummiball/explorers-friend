@@ -261,6 +261,11 @@ public final class ExplorersFriendPlugin extends JavaPlugin {
             providers.add(new GriefPreventionClaimProvider(this, ExplorersFriendPlugin::dimensionId));
             Log.LOGGER.info("[ExplorersFriend/Claims] GriefPrevention: adapter active");
         }
+        Path importFile = getDataFolder().toPath().resolve("claims-import.jsonc");
+        if (providerEnabled("jsonimport") && java.nio.file.Files.isRegularFile(importFile)) {
+            providers.add(new JsonImportClaimProvider(importFile));
+            Log.LOGGER.info("[ExplorersFriend/Claims] JSON import: active ({})", importFile.getFileName());
+        }
         if (!providers.isEmpty() && config.claims().enabled()) {
             claimManager = new ClaimManager(claimsLayer, providers, config.claims(),
                     task -> Bukkit.getScheduler().runTask(this, task), scanPool,
