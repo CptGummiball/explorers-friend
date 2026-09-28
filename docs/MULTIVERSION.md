@@ -1,22 +1,29 @@
-# Multi-version support (0.3.0)
+# Multi-version support (0.5.2)
 
-Sources verified against piston-meta.mojang.com, meta.fabricmc.net and Modrinth on
-2026-07-19. Newest stable Minecraft: **26.2**.
+Minecraft 26.3, Fabric Loader 0.19.5 and the NeoForge target lines were checked
+against the official Minecraft, Fabric and NeoForge release feeds in September
+2026. Newest stable Minecraft: **26.3**.
 
 ## Download table
 
-| Minecraft | Artifact | Java | Loader | Mappings era |
-| --- | --- | ---: | --- | --- |
-| 1.21.1 | `explorersfriend-fabric-1.21.1-0.3.0.jar` | 21 | ≥0.16 | Yarn (obfuscated) |
-| 1.21.2 – 1.21.4 | `explorersfriend-fabric-1.21.2-1.21.4-0.3.0.jar` | 21 | ≥0.16 | Yarn |
-| 1.21.5 – 1.21.8 | `explorersfriend-fabric-1.21.5-1.21.8-0.3.0.jar` | 21 | ≥0.16 | Yarn |
-| 1.21.9 – 1.21.10 | `explorersfriend-fabric-1.21.9-1.21.10-0.3.0.jar` | 21 | ≥0.17.0 | Yarn |
-| 1.21.11 | `explorersfriend-fabric-1.21.11-0.3.0.jar` | 21 | ≥0.17.3 | Yarn |
-| 26.1 – 26.1.2 | `explorersfriend-fabric-26.1-0.3.0.jar` | 25 | ≥0.19 | official (unobfuscated) |
-| 26.2 | `explorersfriend-fabric-26.2-0.3.0.jar` | 25 | ≥0.19 | official (unobfuscated) |
+| Minecraft | Fabric/Quilt artifact (`explorersfriend-fabric-…-0.5.2.jar`) | NeoForge artifact (`explorersfriend-neoforge-…-0.5.2.jar`) | Java |
+| --- | --- | --- | ---: |
+| 1.21.1 | `1.21.1` | `1.21.1` | 21 |
+| 1.21.2 | `1.21.2-1.21.4` | `1.21.2` | 21 |
+| 1.21.3 | `1.21.2-1.21.4` | `1.21.3` | 21 |
+| 1.21.4 | `1.21.2-1.21.4` | `1.21.4` | 21 |
+| 1.21.5–1.21.8 | `1.21.5-1.21.8` | exact version (`1.21.5`, …, `1.21.8`) | 21 |
+| 1.21.9–1.21.10 | `1.21.9-1.21.10` | exact version (`1.21.9` or `1.21.10`) | 21 |
+| 1.21.11 | `1.21.11` | `1.21.11` | 21 |
+| 26.1–26.1.2 | `26.1` | `26.1` | 25 |
+| 26.2 | `26.2` | `26.2` | 25 |
+| 26.3 | `26.3` | `26.3` | 25 |
 
-Install exactly ONE variant matching your Minecraft version; remove other variants
-from `mods/`. Fabric API is required on every version. Clients still need nothing.
+Prefix the table value with the platform artifact name shown in the column
+heading. Install exactly **one** variant in `mods/`. Fabric API is required for
+Fabric/Quilt; NeoForge needs no extra library. Clients still need nothing.
+Minecraft 26.3 on Fabric needs Fabric Loader 0.19.5 or newer. Other minimums
+are encoded in each jar's loader metadata.
 
 ## Family boundaries (compile-verified, not guessed)
 
@@ -53,6 +60,9 @@ Discovered by compiling the identical platform source against every stable relea
   (legacy loom, yarn mappings, remapJar) and `explorersfriend.platform-noremap`
   (26.x pipeline, jar is final). Per-module pins live in each module's
   `gradle.properties`; nothing dynamic.
+- `platforms/neoforge-*` — one official-mappings module per 1.21.x release,
+  plus 26.1, 26.2 and 26.3 modules. NeoForge's MC-specific loader lines and
+  dependency ranges prevent one untested jar from advertising other releases.
 
 ## Build commands
 
@@ -61,9 +71,10 @@ Discovered by compiling the identical platform source against every stable relea
 ./gradlew testAllVersions
 ./gradlew packageAllVersions    # dist/ + checksums + release-manifest.json
 ./gradlew verifyAllArtifacts    # structural jar checks
-./gradlew :platforms:fabric-26.2:build   # single target
-python scripts/smoke.py --module fabric-26.2 --mc 26.2 --java 25 \
-    --loader 0.19.3 --jar dist/explorersfriend-fabric-26.2-0.3.0.jar
+./gradlew :platforms:fabric-26.3:build   # single target
+./gradlew :platforms:neoforge-1.21.10:build
+python scripts/smoke.py --module fabric-26.3 --mc 26.3 --java 25 \
+    --loader 0.19.5 --jar dist/explorersfriend-fabric-26.3-0.5.2.jar
 ```
 
 The Gradle JVM must be Java 25 (loom requires it for 26.x targets); per-module
@@ -79,6 +90,12 @@ toolchains still emit Java-21 bytecode for the 1.21.x artifacts (checked via
 | 1.21.9–1.21.10 | – no Fabric build exists | ✅ | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
 | 1.21.11 | ✅ adapter (0.4.0) | ✅ | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
 | 26.1/26.2 | – no Fabric build exists | ✅ adapter (0.4.0) | ✅ (0.4.0) | ✅ (0.4.0) | ✅ |
+| 26.3 Fabric | – | – (no validated API yet) | adapter included; runtime smoke pending | – (no validated API yet) | ✅ |
+
+On new NeoForge targets (1.21.2–1.21.11, 26.1, 26.3), only the JSON claim
+import is currently enabled. Existing NeoForge 1.21.1 and 26.2 integrations
+remain available. These are platform-specific differences; the table above
+describes Fabric/Quilt.
 
 A missing external claim mod is never an error: detection logs it and the base map
 is fully functional everywhere.

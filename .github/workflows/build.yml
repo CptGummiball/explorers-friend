@@ -31,6 +31,30 @@ jobs:
       - name: Run all tests
         run: ./gradlew testAllVersions --no-daemon --stacktrace
 
+      # Exercise the mixin boundary and the new 26.3 launchers on real servers.
+      - name: Smoke test NeoForge 1.21.5
+        run: python3 scripts/smoke_neoforge.py --mc 1.21.5 --neoforge 21.5.97 --java 21 --jar 'platforms/neoforge-1.21.5/build/libs/explorersfriend-neoforge-1.21.5-*.jar'
+
+      - name: Smoke test Fabric 26.3
+        run: python3 scripts/smoke.py --module fabric-26.3 --mc 26.3 --java 25 --loader 0.19.5 --jar 'platforms/fabric-26.3/build/libs/explorersfriend-fabric-26.3-*.jar'
+
+      - name: Smoke test NeoForge 26.3
+        run: python3 scripts/smoke_neoforge.py --mc 26.3 --neoforge 26.3.0.16-beta --java 25 --jar 'platforms/neoforge-26.3/build/libs/explorersfriend-neoforge-26.3-*.jar'
+
+      # Sample each additional API boundary; the remaining exact-version jars
+      # are compiled and structurally verified below.
+      - name: Smoke test NeoForge 1.21.2
+        run: python3 scripts/smoke_neoforge.py --mc 1.21.2 --neoforge 21.2.1-beta --java 21 --jar 'platforms/neoforge-1.21.2/build/libs/explorersfriend-neoforge-1.21.2-*.jar'
+
+      - name: Smoke test NeoForge 1.21.9
+        run: python3 scripts/smoke_neoforge.py --mc 1.21.9 --neoforge 21.9.16-beta --java 21 --jar 'platforms/neoforge-1.21.9/build/libs/explorersfriend-neoforge-1.21.9-*.jar'
+
+      - name: Smoke test NeoForge 1.21.11
+        run: python3 scripts/smoke_neoforge.py --mc 1.21.11 --neoforge 21.11.45 --java 21 --jar 'platforms/neoforge-1.21.11/build/libs/explorersfriend-neoforge-1.21.11-*.jar'
+
+      - name: Smoke test NeoForge 26.1
+        run: python3 scripts/smoke_neoforge.py --mc 26.1 --neoforge 26.1.0.19-beta --java 25 --jar 'platforms/neoforge-26.1/build/libs/explorersfriend-neoforge-26.1-*.jar'
+
       - name: Package and verify artifacts
         run: ./gradlew packageAllVersions verifyAllArtifacts --no-daemon --stacktrace
 

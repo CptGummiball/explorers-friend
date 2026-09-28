@@ -238,15 +238,25 @@ public final class RegionChunkExtractor {
                 boolean[] waterlogged = new boolean[paletteList.size()];
                 boolean allInvisible = true;
                 for (int i = 0; i < paletteList.size(); i++) {
-                    Map<String, Object> entry = paletteList.get(i) instanceof Map<?, ?> m
+                    Object rawEntry = paletteList.get(i);
+                    Map<String, Object> entry = rawEntry instanceof Map<?, ?> m
                             ? (Map<String, Object>) m : Map.of();
-                    String name = NbtReader.string(entry, "Name");
+                    // 26.3 uses a bare block id for default states and lower-case
+                    // id/properties for states with properties. Older chunks use
+                    // Name/Properties; worlds can contain both after an upgrade.
+                    String name = rawEntry instanceof String s ? s : NbtReader.string(entry, "id");
+                    if (name == null) {
+                        name = NbtReader.string(entry, "Name");
+                    }
                     if (name == null || name.endsWith("air")) {
                         infos[i] = RenderPalette.BlockInfo.INVISIBLE;
                         continue;
                     }
                     infos[i] = infoCache.computeIfAbsent(name, palette::blockInfo);
-                    Map<String, Object> properties = NbtReader.compound(entry, "Properties");
+                    Map<String, Object> properties = NbtReader.compound(entry, "properties");
+                    if (properties == null) {
+                        properties = NbtReader.compound(entry, "Properties");
+                    }
                     waterlogged[i] = properties != null
                             && "true".equals(NbtReader.string(properties, "waterlogged"));
                     if (!infos[i].excluded() || infos[i].water() || waterlogged[i]) {

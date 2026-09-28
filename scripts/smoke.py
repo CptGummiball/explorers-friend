@@ -10,6 +10,7 @@ HTTP checks, clean stop, second start (cache hits), stop. Appends the result to
 dist/test-results.json (consumed by packageAllVersions for the release manifest).
 """
 import argparse
+import glob
 import json
 import os
 import shutil
@@ -21,8 +22,8 @@ import time
 import urllib.request
 
 JAVA_HOMES = {
-    "21": r"C:\Program Files\Java\jdk-21",
-    "25": r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot",
+    "21": os.environ.get("JAVA_HOME_21_X64", r"C:\Program Files\Java\jdk-21"),
+    "25": os.environ.get("JAVA_HOME_25_X64", r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot"),
 }
 INSTALLER = "1.1.2"
 
@@ -81,7 +82,7 @@ def start_server(work, java_home, log_name):
     log = os.path.join(work, log_name)
     with open(log, "wb") as out:
         proc = subprocess.Popen(
-            [os.path.join(java_home, "bin", "java.exe"), "-Xmx2G",
+            [os.path.join(java_home, "bin", "java.exe" if os.name == "nt" else "java"), "-Xmx2G",
              "-jar", "fabric-server-launch.jar", "nogui"],
             cwd=work, stdout=out, stderr=subprocess.STDOUT)
     return proc, log
@@ -99,6 +100,11 @@ def main():
     ap.add_argument("--workdir", default=None)
     ap.add_argument("--game-port", type=int, default=25599)
     args = ap.parse_args()
+
+    matches = [path for path in glob.glob(args.jar) if not path.endswith("-sources.jar")]
+    if len(matches) != 1:
+        raise SystemExit(f"expected one built jar for {args.jar}: {matches}")
+    args.jar = matches[0]
 
     java_home = JAVA_HOMES[args.java]
     work = args.workdir or os.path.join(os.environ.get("TEMP", "/tmp"),

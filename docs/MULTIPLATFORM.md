@@ -2,8 +2,11 @@
 
 Sources verified 2026-07-19 against meta.quiltmc.org, maven.neoforged.net,
 files.minecraftforge.net, fill.papermc.io, maven.ftb.dev and Modrinth.
-Status: **implemented and runtime-verified** — every "tested" entry below names
-a real dedicated-server smoke run (dist/test-results.json).
+The verified results below describe the 0.5.1 targets. Version 0.5.2 adds
+Fabric/Quilt 26.3 and NeoForge 1.21.2–1.21.11, 26.1 and 26.3 artifacts.
+Their new loader combinations must pass dedicated-server smoke tests before
+they can be listed as runtime-verified; a successful compile alone is not a
+runtime test. `dist/test-results.json` records the tested combinations.
 
 ## 0. Verified support matrix (0.4.x multi-platform build)
 

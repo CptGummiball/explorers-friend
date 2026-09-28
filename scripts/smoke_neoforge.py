@@ -8,6 +8,7 @@ Usage: python scripts/smoke_neoforge.py --mc 1.21.1 --neoforge 21.1.243 --java 2
            --jar platforms/neoforge-1.21.1/build/libs/explorersfriend-neoforge-1.21.1-<ver>.jar
 """
 import argparse
+import glob
 import io
 import json
 import os
@@ -18,12 +19,13 @@ import subprocess
 import sys
 import time
 import urllib.request
+import zlib
 
 TEMP = os.environ.get("TEMP", "/tmp")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JAVA = {
-    "21": r"C:\Program Files\Java\jdk-21",
-    "25": r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot",
+    "21": os.environ.get("JAVA_HOME_21_X64", r"C:\Program Files\Java\jdk-21"),
+    "25": os.environ.get("JAVA_HOME_25_X64", r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot"),
 }
 UA = {"User-Agent": "explorersfriend-smoke"}
 
@@ -79,11 +81,16 @@ def main():
     ap.add_argument("--integrations", action="store_true")
     args = ap.parse_args()
 
+    matches = [path for path in glob.glob(args.jar) if not path.endswith("-sources.jar")]
+    if len(matches) != 1:
+        raise SystemExit(f"expected one built jar for {args.jar}: {matches}")
+    args.jar = matches[0]
+
     work = os.path.join(TEMP, "ef-neoforge", args.mc)
     if os.path.exists(work):
         shutil.rmtree(work)
     os.makedirs(os.path.join(work, "mods"))
-    exe = os.path.join(JAVA[args.java], "bin", "java.exe")
+    exe = os.path.join(JAVA[args.java], "bin", "java.exe" if os.name == "nt" else "java")
 
     print(f"[smoke] neoforge {args.neoforge}: installing server...")
     installer = os.path.join(work, "installer.jar")
@@ -129,10 +136,10 @@ def main():
     args_file = None
     for root, dirs, files in os.walk(os.path.join(work, "libraries", "net", "neoforged", "neoforge")):
         for f in files:
-            if f == "win_args.txt":
+            if f == ("win_args.txt" if os.name == "nt" else "unix_args.txt"):
                 args_file = os.path.join(root, f)
     if not args_file:
-        raise SystemExit("win_args.txt not found after install")
+        raise SystemExit("NeoForge launcher args not found after install")
 
     log_path = os.path.join(work, "server-out.log")
     log = io.open(log_path, "w", encoding="utf-8", errors="replace")
@@ -162,18 +169,62 @@ def main():
             checks["waystonesDetected"] = "Waystones detected" in text
             status, body = http_get(args.web, "/api/v1/claims?world=minecraft_overworld")
             checks["claimsEndpoint"] = status == 200
+        # A fresh 26.x server can persist structure-start chunks around spawn
+        # without completing generation until a player or ticket loads a chunk.
+        # Render only fully generated chunks, as the mod does in production.
+        force_response = rcon(args.rcon, "efsmoke", "forceload add 0 0")
+        time.sleep(10)
         rcon(args.rcon, "efsmoke", "save-all flush")
         time.sleep(8)
         out = rcon(args.rcon, "efsmoke", "efmap render minecraft:overworld 256")
         checks["renderCommand"] = "started" in out or "queued" in out
         tile_seen = False
         deadline = time.time() + 180
+        render_finished_at = None
         while time.time() < deadline and not tile_seen:
             time.sleep(5)
             import glob as _glob
             tile_seen = bool(_glob.glob(os.path.join(
                 work, "explorersfriend", "tiles", "minecraft_overworld", "0", "*.png")))
+            if "Full render of minecraft_overworld finished" in io.open(
+                    log_path, encoding="utf-8", errors="replace").read():
+                render_finished_at = render_finished_at or time.time()
+                if time.time() - render_finished_at > 10:
+                    break
         checks["tileRendered"] = tile_seen
+        if not tile_seen:
+            print(f"[smoke] forceload RCON response: {force_response!r}")
+            print(f"[smoke] render RCON response: {out!r}")
+            for root, dirs, files in os.walk(os.path.join(work, "world")):
+                if root.endswith("region"):
+                    print(f"[smoke] region directory: {root} ({len(files)} files)")
+                    for filename in files[:4]:
+                        if not filename.endswith(".mca"):
+                            continue
+                        with open(os.path.join(root, filename), "rb") as region:
+                            header = region.read(4096)
+                            locations = [int.from_bytes(header[i:i + 3], "big")
+                                         for i in range(0, 4096, 4)]
+                            print(f"[smoke] {filename}: {sum(bool(v) for v in locations)} chunk(s)")
+                            if not any(locations):
+                                continue
+                            region.seek(next(v for v in locations if v) * 4096)
+                            length = int.from_bytes(region.read(4), "big")
+                            codec = region.read(1)[0]
+                            data = region.read(length - 1)
+                            if codec == 2:
+                                data = zlib.decompress(data)
+                            print(f"[smoke] first chunk NBT: codec={codec}, prefix={data[:100]!r}")
+                            for key in (b"Status", b"sections", b"xPos", b"block_states"):
+                                offset = data.find(key)
+                                print(f"[smoke] {key.decode()}: {data[offset:offset + 70]!r}")
+                            break
+            for root, dirs, files in os.walk(os.path.join(work, "explorersfriend", "tiles")):
+                if files:
+                    print(f"[smoke] tile directory: {root} ({len(files)} files)")
+            relevant = (line for line in io.open(log_path, encoding="utf-8", errors="replace")
+                        if "ExplorersFriend" in line or "Exception" in line or " ERROR " in line)
+            print("[smoke] relevant server log:\n" + "".join(list(relevant)[-80:]))
         # NeoForge relays command feedback to RCON differently; the tile output is
         # the authoritative proof that the render command executed.
         if tile_seen:
@@ -195,6 +246,7 @@ def main():
     for k, v in checks.items():
         print(f"  {k}: {'ok' if v else 'FAIL'}")
     results_file = os.path.join(ROOT, "dist", "test-results.json")
+    os.makedirs(os.path.dirname(results_file), exist_ok=True)
     results = json.load(io.open(results_file)) if os.path.exists(results_file) else {}
     key = f"neoforge-{args.mc}"
     results.setdefault(key, {"versions": {}})
