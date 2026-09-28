@@ -6,7 +6,9 @@
   and multiple `polygons` on every platform. Polygon outlines are preserved in
   the claims API and web map, including accurate hover selection; existing
   chunk and rectangle claims remain supported.
-- **Minecraft 26.3**: separate Fabric/Quilt and NeoForge server artifacts.
+- **Minecraft 26.3**: separate Fabric/Quilt and NeoForge server artifacts;
+  region rendering reads both legacy block-state compounds and 26.3's compact
+  block ids and lowercase state fields, including mixed old/new worlds.
 - **NeoForge coverage**: add version-specific artifacts for Minecraft
   1.21.2 through 1.21.11 and a 26.1 family artifact (26.1–26.1.2).
   The new targets include the JSONC claim import; optional integrations need

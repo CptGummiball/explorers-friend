@@ -70,6 +70,35 @@ class RegionRoundTripTest {
     }
 
     @Test
+    void extractorReadsCompactAndLowercaseBlockStates() throws IOException {
+        RegionChunkExtractor extractor = new RegionChunkExtractor(TestPalette.INSTANCE,
+                new RegionChunkExtractor.Settings(true, false));
+        Map<String, Object> compact = TestRegions.flatChunk(0, 0, false);
+        replaceBlockPalette(compact, List.of("minecraft:air", "minecraft:stone", "minecraft:water"));
+        Map<String, Object> parsed = NbtReader.readRootCompound(new DataInputStream(
+                new java.io.ByteArrayInputStream(TestNbt.rootCompound(compact))));
+        assertEquals(0xFF808080, extractor.extract(parsed).colors()[0],
+                "26.3 compact palette must render stone instead of a blank tile");
+
+        Map<String, Object> lowercase = TestRegions.flatChunk(0, 0, false);
+        replaceBlockPalette(lowercase, List.of(
+                Map.of("id", "minecraft:air"),
+                Map.of("id", "minecraft:stone", "properties", Map.of("waterlogged", "true")),
+                Map.of("id", "minecraft:water")));
+        TileChunkData hydrated = extractor.extract(lowercase);
+        assertNotNull(hydrated);
+        assertNotEquals(0xFF808080, hydrated.colors()[0],
+                "lowercase properties must preserve waterlogged shading");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void replaceBlockPalette(Map<String, Object> chunk, List<?> palette) {
+        Map<String, Object> section = (Map<String, Object>) ((List<?>) chunk.get("sections")).get(0);
+        Map<String, Object> old = (Map<String, Object>) section.get("block_states");
+        section.put("block_states", Map.of("palette", palette, "data", old.get("data")));
+    }
+
+    @Test
     void extractionIsDeterministic() {
         RegionChunkExtractor extractor = new RegionChunkExtractor(TestPalette.INSTANCE,
                 new RegionChunkExtractor.Settings(true, false));
