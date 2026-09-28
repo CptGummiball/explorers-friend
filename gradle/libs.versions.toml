@@ -50,6 +50,8 @@ mc261 = "26.1.2"            # newest patch of the 26.1 line
 api261 = "0.155.2+26.1.2"
 mc262 = "26.2"
 api262 = "0.155.2+26.2"
+mc263 = "26.3"
+api263 = "0.160.7+26.3"
 
 # claim integrations (compile-only; per era)
 ftbChunks1211 = "2101.1.20"

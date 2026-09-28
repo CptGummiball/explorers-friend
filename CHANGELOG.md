@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.2 — unreleased
+
+- **Polygon claims**: the JSONC claim import accepts WorldGuard-style `points`
+  and multiple `polygons` on every platform. Polygon outlines are preserved in
+  the claims API and web map, including accurate hover selection; existing
+  chunk and rectangle claims remain supported.
+- **Minecraft 26.3**: separate Fabric/Quilt and NeoForge server artifacts.
+- **NeoForge coverage**: add version-specific artifacts for Minecraft
+  1.21.2 through 1.21.11 and a 26.1 family artifact (26.1–26.1.2).
+  The new targets include the JSONC claim import; optional integrations need
+  compatible, validated upstream API builds before they can be enabled.
+
 ## 0.5.1 — 2026-07-24 (multi-platform expansion)
 
 - **New platforms**: NeoForge backend (1.21.1 + 26.2 modules, ModDevGradle,
