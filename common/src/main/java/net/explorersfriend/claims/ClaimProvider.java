@@ -40,8 +40,10 @@ public interface ClaimProvider {
      * @param chunks        claimed chunk positions ({@link ChunkRectMerger#pack}); may be
      *                      empty when {@code explicitRects} is supplied
      * @param explicitRects pre-made block-coordinate rectangles for providers with
-     *                      region/polygon geometry (avoids exploding large areas into
+     *                      rectangular geometry (avoids exploding large areas into
      *                      thousands of chunk squares); null = derive from chunks
+     * @param polygons      polygon outlines, each a ring of block X/Z vertices;
+     *                      may coexist with rectangles; null = none
      * @param claimName     display name of the claim/area, or null
      * @param ownerName     display name of the owner, or null
      * @param teamName      team/group display name, or null
@@ -53,16 +55,25 @@ public interface ClaimProvider {
             String dimensionId,
             Set<Long> chunks,
             List<MapClaim.ClaimRect> explicitRects,
+            List<List<MapClaim.ClaimPoint>> polygons,
             String claimName,
             String ownerName,
             String teamName,
             Integer explicitColor,
             boolean hidden) {
 
+        /** Existing rectangle-only provider signature. */
+        public RawArea(String areaKey, String dimensionId, Set<Long> chunks,
+                       List<MapClaim.ClaimRect> explicitRects, String claimName,
+                       String ownerName, String teamName, Integer explicitColor, boolean hidden) {
+            this(areaKey, dimensionId, chunks, explicitRects, null, claimName,
+                    ownerName, teamName, explicitColor, hidden);
+        }
+
         public static RawArea ofChunks(String areaKey, String dimensionId, Set<Long> chunks,
                                        String claimName, String ownerName, String teamName,
                                        Integer explicitColor, boolean hidden) {
-            return new RawArea(areaKey, dimensionId, chunks, null, claimName, ownerName,
+            return new RawArea(areaKey, dimensionId, chunks, null, null, claimName, ownerName,
                     teamName, explicitColor, hidden);
         }
     }

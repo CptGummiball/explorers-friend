@@ -127,7 +127,7 @@
       ctx.fillStyle = argbToRgba(claim.fill);
       ctx.strokeStyle = argbToRgba(claim.border);
       ctx.lineWidth = borderWidth;
-      for (const rect of claim.rects) {
+      for (const rect of claim.rects || []) {
         const x = (rect[0] - minBlockX) * scale;
         const z = (rect[1] - minBlockZ) * scale;
         const w = (rect[2] - rect[0] + 1) * scale;
@@ -136,7 +136,32 @@
         ctx.fillRect(x, z, w, h);
         ctx.strokeRect(x, z, w, h);
       }
+      for (const ring of claim.polygons || []) {
+        if (ring.length < 3) continue;
+        ctx.beginPath();
+        ctx.moveTo((ring[0][0] - minBlockX) * scale, (ring[0][1] - minBlockZ) * scale);
+        for (let i = 1; i < ring.length; i++) {
+          ctx.lineTo((ring[i][0] - minBlockX) * scale, (ring[i][1] - minBlockZ) * scale);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
     }
+  }
+
+  function inPolygon(x, z, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [ax, az] = ring[j], [bx, bz] = ring[i];
+      const cross = (x - ax) * (bz - az) - (z - az) * (bx - ax);
+      if (Math.abs(cross) < 1e-9 && x >= Math.min(ax, bx) && x <= Math.max(ax, bx)
+          && z >= Math.min(az, bz) && z <= Math.max(az, bz)) return true;
+      if ((az > z) !== (bz > z) && x < ax + (z - az) * (bx - ax) / (bz - az)) {
+        inside = !inside;
+      }
+    }
+    return inside;
   }
 
   function visibleMarkers() {
@@ -226,12 +251,15 @@
     }
     if (layers.claims) {
       for (const claim of overlays.claims.items) {
-        for (const r of claim.rects) {
+        let hit = false;
+        for (const r of claim.rects || []) {
           if (blockX >= r[0] && blockX <= r[2] && blockZ >= r[1] && blockZ <= r[3]) {
-            result.claims.push(claim);
+            hit = true;
             break;
           }
         }
+        if (!hit) hit = (claim.polygons || []).some(ring => inPolygon(blockX, blockZ, ring));
+        if (hit) result.claims.push(claim);
       }
     }
     return result;

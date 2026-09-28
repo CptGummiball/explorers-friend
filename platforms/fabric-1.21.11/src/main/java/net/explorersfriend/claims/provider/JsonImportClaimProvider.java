@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.explorersfriend.ExplorersFriend;
 import net.explorersfriend.claims.ChunkRectMerger;
 import net.explorersfriend.claims.ClaimProvider;
+import net.explorersfriend.claims.ClaimImportGeometry;
 import net.explorersfriend.claims.MapClaim;
 import net.explorersfriend.config.ConfigIO;
 import net.explorersfriend.util.Jsonc;
@@ -95,14 +96,15 @@ public final class JsonImportClaimProvider implements ClaimProvider {
                         rects.add(new MapClaim.ClaimRect(minX, minZ, maxX, maxZ));
                     }
                 }
-                if (chunks.isEmpty() && rects.isEmpty()) {
+                List<List<MapClaim.ClaimPoint>> polygons = ClaimImportGeometry.parsePolygons(obj);
+                if (chunks.isEmpty() && rects.isEmpty() && polygons.isEmpty()) {
                     continue;
                 }
                 if (!chunks.isEmpty()) {
                     rects.addAll(ChunkRectMerger.merge(chunks));
                 }
                 Integer color = obj.has("color") ? ConfigIO.parseColor(obj.get("color").getAsString()) : null;
-                out.add(new RawArea("import:" + id, world, Set.of(), rects,
+                out.add(new RawArea("import:" + id, world, Set.of(), rects, polygons,
                         asStringOrNull(obj, "name"), asStringOrNull(obj, "owner"),
                         asStringOrNull(obj, "team"),
                         color == null ? null : color & 0xFFFFFF, false));

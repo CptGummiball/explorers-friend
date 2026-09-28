@@ -135,7 +135,8 @@ public final class ClaimManager {
         for (ClaimProvider.RawArea area : rawAreas) {
             try {
                 boolean hasGeometry = !area.chunks().isEmpty()
-                        || (area.explicitRects() != null && !area.explicitRects().isEmpty());
+                        || (area.explicitRects() != null && !area.explicitRects().isEmpty())
+                        || (area.polygons() != null && !area.polygons().isEmpty());
                 if (area.hidden() || !hasGeometry) {
                     continue;
                 }
@@ -149,6 +150,8 @@ public final class ClaimManager {
                 List<MapClaim.ClaimRect> rects = area.explicitRects() != null && !area.explicitRects().isEmpty()
                         ? area.explicitRects()
                         : ChunkRectMerger.merge(area.chunks());
+                List<List<MapClaim.ClaimPoint>> polygons = area.polygons() == null
+                        ? List.of() : area.polygons();
                 String stableKey = area.teamName() != null && !area.teamName().isBlank()
                         ? providerId + ":" + area.teamName()
                         : providerId + ":" + area.areaKey();
@@ -160,6 +163,7 @@ public final class ClaimManager {
                         providerId,
                         slug,
                         rects,
+                        polygons,
                         config.showName() ? area.claimName() : null,
                         config.showOwner() ? area.ownerName() : null,
                         config.showTeam() ? area.teamName() : null,
