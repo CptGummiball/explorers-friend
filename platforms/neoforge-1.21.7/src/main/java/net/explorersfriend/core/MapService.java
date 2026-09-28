@@ -175,7 +175,7 @@ public final class MapService {
         }
         scanPool = Executors.newFixedThreadPool(config.scan().threads(), new NamedThreadFactory("EF-Scan"));
         sched = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("EF-Sched"));
-        String gameVersion = net.minecraft.SharedConstants.getCurrentVersion().getName();
+        String gameVersion = net.minecraft.SharedConstants.getCurrentVersion().name();
         scanPool.submit(() -> {
             try {
                 runStartupPipeline(gameVersion);
