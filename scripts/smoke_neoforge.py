@@ -180,6 +180,17 @@ def main():
             tile_seen = bool(_glob.glob(os.path.join(
                 work, "explorersfriend", "tiles", "minecraft_overworld", "0", "*.png")))
         checks["tileRendered"] = tile_seen
+        if not tile_seen:
+            print(f"[smoke] render RCON response: {out!r}")
+            for root, dirs, files in os.walk(os.path.join(work, "world")):
+                if root.endswith("region"):
+                    print(f"[smoke] region directory: {root} ({len(files)} files)")
+            for root, dirs, files in os.walk(os.path.join(work, "explorersfriend", "tiles")):
+                if files:
+                    print(f"[smoke] tile directory: {root} ({len(files)} files)")
+            relevant = (line for line in io.open(log_path, encoding="utf-8", errors="replace")
+                        if "ExplorersFriend" in line or "Exception" in line or " ERROR " in line)
+            print("[smoke] relevant server log:\n" + "".join(list(relevant)[-80:]))
         # NeoForge relays command feedback to RCON differently; the tile output is
         # the authoritative proof that the render command executed.
         if tile_seen:
