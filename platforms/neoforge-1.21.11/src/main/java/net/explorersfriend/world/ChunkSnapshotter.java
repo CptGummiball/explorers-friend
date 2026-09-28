@@ -131,7 +131,7 @@ public final class ChunkSnapshotter {
             snapshotsTaken.incrementAndGet();
         } catch (Exception e) {
             ExplorersFriend.LOGGER.debug("[ExplorersFriend/Renderer] Unload snapshot failed for {} {},{}: {}",
-                    slug, chunk.getPos().x(), chunk.getPos().z(), e.toString());
+                    slug, chunk.getPos().x, chunk.getPos().z, e.toString());
         }
     }
 

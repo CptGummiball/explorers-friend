@@ -2,7 +2,7 @@
 
 **A lightweight, fully server-side browser world map for Minecraft servers** —
 Fabric, Quilt, NeoForge, Spigot and Paper from one shared core.
-Minecraft 1.21.1 – 26.2 · Fabric/Quilt · NeoForge · Spigot/Paper · Java 21 / 25
+Minecraft 1.21.1 – 26.3 · Fabric/Quilt · NeoForge · Spigot/Paper · Java 21 / 25
 
 The Explorer's Friend renders a live topographic map of your world and serves it as a
 web page from an embedded HTTP server. It is built around three ideas:
@@ -24,14 +24,16 @@ web page from an embedded HTTP server. It is built around three ideas:
 
 ## Supported platforms
 
-**Fabric** and **Quilt** (same jar), **NeoForge** (1.21.1, 26.2), and
+**Fabric** and **Quilt** (same jar), **NeoForge** (version-specific jars), and
 **Spigot/Paper** (one plugin jar for all supported versions, GriefPrevention
 integration). Per-platform install: [docs/INSTALL.md](docs/INSTALL.md);
 verified support matrix: [docs/MULTIPLATFORM.md](docs/MULTIPLATFORM.md).
 
 ## Supported Minecraft versions
 
-Seven artifacts cover every stable release from **1.21.1 to 26.2**. Pick the jar matching your server version - full table, family boundaries and per-version integration availability in [docs/MULTIVERSION.md](docs/MULTIVERSION.md).
+Fabric/Quilt family jars and NeoForge version-specific jars cover **1.21.1 to
+26.3**. Pick the jar matching your server version; the artifact table and
+integration availability are in [docs/MULTIVERSION.md](docs/MULTIVERSION.md).
 
 ## Installation (server)
 
@@ -73,7 +75,7 @@ Four independent overlay layers ship with the map — all separate from the rend
 tiles, individually toggleable in the web UI (state persists in the browser):
 
 - **Claims** — auto-detected integrations for FTB Chunks, Open Parties and Claims
-  and GOML/Common Protection API (Fabric/Quilt/NeoForge) and **GriefPrevention**
+  and GOML/Common Protection API (on versions with verified adapters) and **GriefPrevention**
   (Spigot/Paper) — official APIs, nothing bundled — plus a JSON import file for
   everything else. Semi-transparent fills, opaque borders, provider/team colors,
   hover details. See [docs/CLAIM_PROVIDERS.md](docs/CLAIM_PROVIDERS.md).

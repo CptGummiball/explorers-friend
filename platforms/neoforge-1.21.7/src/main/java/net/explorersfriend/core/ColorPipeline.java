@@ -158,7 +158,7 @@ public final class ColorPipeline {
         StateColorTable stateTable = StateColorTable.build(results, overrides,
                 Set.copyOf(normalize(config.blocks().excludeBlocks())), config.blocks().unknownBlockColor());
         BiomeTintTable biomeTable = BiomeTintTable.build(
-                registryManager.registryOrThrow(Registries.BIOME), grassMap, foliageMap);
+                registryManager.lookupOrThrow(Registries.BIOME), grassMap, foliageMap);
         RuntimePalette palette = new RuntimePalette(stateTable.nameView(), biomeTable.nameView(),
                 config.blocks().unknownBlockColor());
         LOGGER.info("[ExplorersFriend/Colors] Runtime palette ready: {} block(s), {} biome(s), {} manual override(s)",

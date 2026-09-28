@@ -280,7 +280,7 @@ public final class MapService {
         Map<String, DimensionInfo> out = new LinkedHashMap<>();
         Path worldRoot = server.getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize();
         for (ServerLevel world : server.getAllLevels()) {
-            String id = world.dimension().identifier().toString();
+            String id = world.dimension().location().toString();
             if (!isDimensionEnabled(id)) {
                 continue;
             }
@@ -571,8 +571,8 @@ public final class MapService {
         if (slug == null) {
             return;
         }
-        int chunkX = chunk.getPos().x();
-        int chunkZ = chunk.getPos().z();
+        int chunkX = chunk.getPos().x;
+        int chunkZ = chunk.getPos().z;
         if (!renderedIndex.isRendered(slug, chunkX, chunkZ)) {
             dirtyTracker.markDirty(slug, chunkX, chunkZ);
         }
@@ -603,7 +603,7 @@ public final class MapService {
         if (slug == null) {
             return;
         }
-        if (dirtyTracker.clear(slug, chunk.getPos().x(), chunk.getPos().z())) {
+        if (dirtyTracker.clear(slug, chunk.getPos().x, chunk.getPos().z)) {
             snap.snapshotNow(world, chunk); // last chance to read it while loaded
         }
     }
@@ -623,7 +623,7 @@ public final class MapService {
     }
 
     private String slugOfWorld(ServerLevel world) {
-        String slug = TileStore.dimensionSlug(world.dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(world.dimension().location().toString());
         return dimensions.containsKey(slug) ? slug : null;
     }
 

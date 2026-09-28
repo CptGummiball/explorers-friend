@@ -65,9 +65,9 @@ public final class LiveChunkExtractor {
             }
         }
 
-        int[] westHeights = borderHeights(world, chunkPos.x() - 1, chunkPos.z(), true);
-        int[] northHeights = borderHeights(world, chunkPos.x(), chunkPos.z() - 1, false);
-        return new TileChunkData(chunkPos.x(), chunkPos.z(), colorsOut, heights, westHeights, northHeights);
+        int[] westHeights = borderHeights(world, chunkPos.x - 1, chunkPos.z, true);
+        int[] northHeights = borderHeights(world, chunkPos.x, chunkPos.z - 1, false);
+        return new TileChunkData(chunkPos.x, chunkPos.z, colorsOut, heights, westHeights, northHeights);
     }
 
     private void extractColumn(ServerLevel world, LevelChunk chunk, Registry<Biome> biomeRegistry,

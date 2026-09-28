@@ -145,7 +145,7 @@ public final class BannerWatcher {
         if (slug == null) {
             return;
         }
-        if (pos.getX() >> 4 != chunk.getPos().x() || pos.getZ() >> 4 != chunk.getPos().z()) {
+        if (pos.getX() >> 4 != chunk.getPos().x || pos.getZ() >> 4 != chunk.getPos().z) {
             return; // outside this chunk: defer to that chunk's own load event
         }
         String id = MapMarker.bannerId(slug, pos.getX(), pos.getY(), pos.getZ());

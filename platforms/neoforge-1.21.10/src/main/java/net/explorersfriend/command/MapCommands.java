@@ -126,7 +126,7 @@ public final class MapCommands {
             return 0;
         }
         ServerLevel world = DimensionArgument.getDimension(context, "dimension");
-        String slug = TileStore.dimensionSlug(world.dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(world.dimension().location().toString());
         int result = service.startFullRender(slug, radius);
         switch (result) {
             case -1 -> feedback(context, "A full render is already running for this dimension "
@@ -149,7 +149,7 @@ public final class MapCommands {
             return 0;
         }
         ServerLevel world = DimensionArgument.getDimension(context, "dimension");
-        String slug = TileStore.dimensionSlug(world.dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(world.dimension().location().toString());
         feedback(context, "Comparing region files against tiles for " + slug + "...");
         service.startUpdateRender(slug, asyncFeedback(context));
         return 1;
@@ -187,7 +187,7 @@ public final class MapCommands {
             return 0;
         }
         String slug = worldOrNull == null ? null
-                : TileStore.dimensionSlug(worldOrNull.dimension().identifier().toString());
+                : TileStore.dimensionSlug(worldOrNull.dimension().location().toString());
         int cancelled = service.fullRenderManager().cancel(slug);
         feedback(context, cancelled > 0
                 ? "Cancelled " + cancelled + " queued region(s)."

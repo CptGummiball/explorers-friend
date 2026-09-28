@@ -189,7 +189,7 @@ public final class MarkerCommands {
             feedback(context, "Unknown icon '" + icon + "' - using '" + IconLibrary.FALLBACK
                     + "'. See /efmap marker icons.");
         }
-        String slug = TileStore.dimensionSlug(player.level().dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(player.level().dimension().location().toString());
         long now = System.currentTimeMillis();
         MapMarker marker = new MapMarker(UUID.randomUUID().toString(), slug, name,
                 IconLibrary.validateOrFallback(icon),
@@ -210,7 +210,7 @@ public final class MarkerCommands {
             return 0;
         }
         var world = net.minecraft.commands.arguments.DimensionArgument.getDimension(context, "dimension");
-        String slug = TileStore.dimensionSlug(world.dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(world.dimension().location().toString());
         String name = StringArgumentType.getString(context, "name");
         long now = System.currentTimeMillis();
         ServerPlayer player = context.getSource().getPlayer();
@@ -305,7 +305,7 @@ public final class MarkerCommands {
             feedback(context, "Only players can move a marker to their position.");
             return 0;
         }
-        String slug = TileStore.dimensionSlug(player.level().dimension().identifier().toString());
+        String slug = TileStore.dimensionSlug(player.level().dimension().location().toString());
         return mutate(context, "moved to your position", marker -> withPosition(marker, slug,
                 (int) Math.floor(player.getX()), (int) Math.floor(player.getY()),
                 (int) Math.floor(player.getZ())));

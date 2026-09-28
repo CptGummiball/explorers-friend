@@ -364,7 +364,7 @@ public final class MarkerCommands {
         }
         MapMarker m = marker.get();
         player.teleportTo(target.world(), m.x() + 0.5, m.y() + 1.0, m.z() + 0.5,
-                java.util.Set.of(), player.getYRot(), player.getXRot());
+                java.util.Set.of(), player.getYRot(), player.getXRot(), true);
         feedback(context, "Teleported to '" + m.name() + "'.");
         return 1;
     }

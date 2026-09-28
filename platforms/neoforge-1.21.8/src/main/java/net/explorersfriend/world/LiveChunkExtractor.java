@@ -42,9 +42,9 @@ public final class LiveChunkExtractor {
     }
 
     public TileChunkData extract(ServerLevel world, LevelChunk chunk) {
-        Registry<Biome> biomeRegistry = world.registryAccess().registryOrThrow(Registries.BIOME);
+        Registry<Biome> biomeRegistry = world.registryAccess().lookupOrThrow(Registries.BIOME);
         boolean hasCeiling = world.dimensionType().hasCeiling();
-        int minY = world.getMinBuildHeight();
+        int minY = world.getMinY();
         ChunkPos chunkPos = chunk.getPos();
         Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE);
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();

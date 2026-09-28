@@ -24,7 +24,7 @@ import net.explorersfriend.world.StateColorTable;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -125,7 +125,7 @@ public final class ColorPipeline {
             TextureColorCache textureCache = TextureColorCache.load(cacheDir.resolve("texture-colors.json"),
                     ColorExtractor.ALGORITHM_VERSION, animationMode);
             List<String> blockIds = new ArrayList<>();
-            for (Identifier id : BuiltInRegistries.BLOCK.keySet()) {
+            for (ResourceLocation id : BuiltInRegistries.BLOCK.keySet()) {
                 blockIds.add(id.toString());
             }
             blockIds.sort(Comparator.naturalOrder());

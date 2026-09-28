@@ -571,8 +571,8 @@ public final class MapService {
         if (slug == null) {
             return;
         }
-        int chunkX = chunk.getPos().x();
-        int chunkZ = chunk.getPos().z();
+        int chunkX = chunk.getPos().x;
+        int chunkZ = chunk.getPos().z;
         if (!renderedIndex.isRendered(slug, chunkX, chunkZ)) {
             dirtyTracker.markDirty(slug, chunkX, chunkZ);
         }
@@ -603,7 +603,7 @@ public final class MapService {
         if (slug == null) {
             return;
         }
-        if (dirtyTracker.clear(slug, chunk.getPos().x(), chunk.getPos().z())) {
+        if (dirtyTracker.clear(slug, chunk.getPos().x, chunk.getPos().z)) {
             snap.snapshotNow(world, chunk); // last chance to read it while loaded
         }
     }

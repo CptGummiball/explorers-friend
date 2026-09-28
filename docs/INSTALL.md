@@ -10,7 +10,7 @@ artifact/version matrix lives in [MULTIPLATFORM.md](MULTIPLATFORM.md) and
 
 1. Install the [Fabric server launcher](https://fabricmc.net/use/server/) for
    your Minecraft version (loader ≥0.16; 1.21.9+ needs ≥0.17.0, 1.21.11 ≥0.17.3,
-   26.x ≥0.19).
+   26.1/26.2 ≥0.19; 26.3 ≥0.19.5).
 2. Drop **Fabric API** and `explorersfriend-fabric-<mc-range>-<ver>.jar` into `mods/`.
 3. Start the server. Java 21 for 1.21.x, Java 25 for 26.x.
 
@@ -26,8 +26,8 @@ reports `"platform": "quilt"`).
 
 ## NeoForge
 
-1. Install the NeoForge server for your Minecraft version (21.1.x for MC 1.21.1,
-   26.2.x for MC 26.2).
+1. Install the matching NeoForge line (21.1–21.11 for MC 1.21.1–1.21.11;
+   26.1–26.3 for MC 26.1–26.3).
 2. Drop `explorersfriend-neoforge-<mc>-<ver>.jar` into `mods/`. No further
    dependencies.
 3. Java 21 for 1.21.x, Java 25 for 26.x.
@@ -54,6 +54,6 @@ Same plugin jar and steps as Spigot — Paper is detected at runtime
 
 | Platform | Required | Optional integrations |
 | --- | --- | --- |
-| Fabric/Quilt | Fabric API | LuckPerms (permission nodes), FTB Chunks (1.21.1/1.21.11), OPAC, GOML/CPA, Waystones |
-| NeoForge | — | Waystones; OPAC adapter planned |
+| Fabric/Quilt | Fabric API | LuckPerms (permission nodes), FTB Chunks (1.21.1/1.21.11), OPAC/Waystones where available, GOML/CPA |
+| NeoForge | — | Waystones, OPAC and FTB Chunks on previously verified targets (1.21.1 and/or 26.2); new targets use JSON import |
 | Spigot/Paper | — | GriefPrevention |

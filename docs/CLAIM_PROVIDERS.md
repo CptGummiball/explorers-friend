@@ -3,9 +3,11 @@
 > Provider availability differs per Minecraft version - see the matrix in
 > [MULTIVERSION.md](MULTIVERSION.md). Since 0.4.0: FTB Chunks adapters exist for
 > 1.21.1 **and 1.21.11** (no Fabric builds exist for the versions in between or
-> 26.x), the OPAC adapter covers **all** supported versions including 26.x, and the
-> **Common Protection API** provider (GOML ReServed etc.) works everywhere. The
-> JSON import works everywhere.
+> 26.x). OPAC and the Common Protection API are available on the Fabric
+> versions with verified adapters; Fabric 26.3 retains the CPA adapter but has
+> no verified OPAC API yet. New NeoForge 1.21.2–1.21.11, 26.1 and 26.3
+> artifacts use the JSON import; optional adapters need matching API builds.
+> The JSON import works everywhere.
 
 ## Common Protection API (GOML ReServed and others) — since 0.4.0
 

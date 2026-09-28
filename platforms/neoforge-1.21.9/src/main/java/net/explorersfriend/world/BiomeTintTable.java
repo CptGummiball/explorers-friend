@@ -5,7 +5,7 @@ import net.explorersfriend.color.ColormapSampler;
 import net.explorersfriend.render.RuntimePalette;
 import net.minecraft.core.Registry;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 
@@ -45,17 +45,17 @@ public final class BiomeTintTable {
         Map<String, int[]> byName = new HashMap<>();
         for (Biome biome : registry) {
             int rawId = registry.getId(biome);
-            Identifier id = registry.getKey(biome);
+            ResourceLocation id = registry.getKey(biome);
             float temperature = biome.getBaseTemperature();
             float downfall = biome.getModifiedClimateSettings().downfall();
             BiomeSpecialEffects effects = biome.getSpecialEffects();
 
-            int grassColor = effects.grassColorOverride()
+            int grassColor = effects.getGrassColorOverride()
                     .orElseGet(() -> grassMap.sample(temperature, downfall));
-            grassColor = applyGrassModifier(grassColor, effects.grassColorModifier());
-            int foliageColor = effects.foliageColorOverride()
+            grassColor = applyGrassModifier(grassColor, effects.getGrassColorModifier());
+            int foliageColor = effects.getFoliageColorOverride()
                     .orElseGet(() -> foliageMap.sample(temperature, downfall));
-            int waterColor = effects.waterColor();
+            int waterColor = effects.getWaterColor();
 
             if (rawId >= 0 && rawId < size) {
                 grass[rawId] = grassColor;

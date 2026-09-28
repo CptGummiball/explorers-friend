@@ -43,7 +43,7 @@ public final class LivePlayerService {
             if (!isDisplayable(player)) {
                 continue;
             }
-            String slug = TileStore.dimensionSlug(player.level().dimension().identifier().toString());
+            String slug = TileStore.dimensionSlug(player.level().dimension().location().toString());
             if (!enabledSlugs.contains(slug) || config.disabledWorlds().contains(slug)) {
                 continue;
             }
