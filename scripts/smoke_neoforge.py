@@ -169,6 +169,11 @@ def main():
             checks["waystonesDetected"] = "Waystones detected" in text
             status, body = http_get(args.web, "/api/v1/claims?world=minecraft_overworld")
             checks["claimsEndpoint"] = status == 200
+        # A fresh 26.x server can persist structure-start chunks around spawn
+        # without completing generation until a player or ticket loads a chunk.
+        # Render only fully generated chunks, as the mod does in production.
+        force_response = rcon(args.rcon, "efsmoke", "forceload add 0 0")
+        time.sleep(10)
         rcon(args.rcon, "efsmoke", "save-all flush")
         time.sleep(8)
         out = rcon(args.rcon, "efsmoke", "efmap render minecraft:overworld 256")
@@ -188,6 +193,7 @@ def main():
                     break
         checks["tileRendered"] = tile_seen
         if not tile_seen:
+            print(f"[smoke] forceload RCON response: {force_response!r}")
             print(f"[smoke] render RCON response: {out!r}")
             for root, dirs, files in os.walk(os.path.join(work, "world")):
                 if root.endswith("region"):
