@@ -8,6 +8,7 @@ Usage: python scripts/smoke_neoforge.py --mc 1.21.1 --neoforge 21.1.243 --java 2
            --jar platforms/neoforge-1.21.1/build/libs/explorersfriend-neoforge-1.21.1-<ver>.jar
 """
 import argparse
+import glob
 import io
 import json
 import os
@@ -22,8 +23,8 @@ import urllib.request
 TEMP = os.environ.get("TEMP", "/tmp")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JAVA = {
-    "21": r"C:\Program Files\Java\jdk-21",
-    "25": r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot",
+    "21": os.environ.get("JAVA_HOME_21_X64", r"C:\Program Files\Java\jdk-21"),
+    "25": os.environ.get("JAVA_HOME_25_X64", r"C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot"),
 }
 UA = {"User-Agent": "explorersfriend-smoke"}
 
@@ -79,11 +80,16 @@ def main():
     ap.add_argument("--integrations", action="store_true")
     args = ap.parse_args()
 
+    matches = [path for path in glob.glob(args.jar) if not path.endswith("-sources.jar")]
+    if len(matches) != 1:
+        raise SystemExit(f"expected one built jar for {args.jar}: {matches}")
+    args.jar = matches[0]
+
     work = os.path.join(TEMP, "ef-neoforge", args.mc)
     if os.path.exists(work):
         shutil.rmtree(work)
     os.makedirs(os.path.join(work, "mods"))
-    exe = os.path.join(JAVA[args.java], "bin", "java.exe")
+    exe = os.path.join(JAVA[args.java], "bin", "java.exe" if os.name == "nt" else "java")
 
     print(f"[smoke] neoforge {args.neoforge}: installing server...")
     installer = os.path.join(work, "installer.jar")
@@ -129,10 +135,10 @@ def main():
     args_file = None
     for root, dirs, files in os.walk(os.path.join(work, "libraries", "net", "neoforged", "neoforge")):
         for f in files:
-            if f == "win_args.txt":
+            if f == ("win_args.txt" if os.name == "nt" else "unix_args.txt"):
                 args_file = os.path.join(root, f)
     if not args_file:
-        raise SystemExit("win_args.txt not found after install")
+        raise SystemExit("NeoForge launcher args not found after install")
 
     log_path = os.path.join(work, "server-out.log")
     log = io.open(log_path, "w", encoding="utf-8", errors="replace")
@@ -195,6 +201,7 @@ def main():
     for k, v in checks.items():
         print(f"  {k}: {'ok' if v else 'FAIL'}")
     results_file = os.path.join(ROOT, "dist", "test-results.json")
+    os.makedirs(os.path.dirname(results_file), exist_ok=True)
     results = json.load(io.open(results_file)) if os.path.exists(results_file) else {}
     key = f"neoforge-{args.mc}"
     results.setdefault(key, {"versions": {}})

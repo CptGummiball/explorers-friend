@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 abstract class LevelChunkMixin {
 
     @Inject(method = "setBlockState", at = @At("RETURN"))
-    private void explorersfriend$afterBlockChange(BlockPos pos, BlockState state, boolean movedByPiston,
+    private void explorersfriend$afterBlockChange(BlockPos pos, BlockState state, int flags,
                                                   CallbackInfoReturnable<BlockState> cir) {
         // A null return value means the state did not actually change.
         if (cir.getReturnValue() == null) {
