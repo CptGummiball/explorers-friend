@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.2 — unreleased
+## 0.5.2 — 2026-09-28 (Polygon claims, NeoForge coverage)
 
 - **Polygon claims**: the JSONC claim import accepts WorldGuard-style `points`
   and multiple `polygons` on every platform. Polygon outlines are preserved in
