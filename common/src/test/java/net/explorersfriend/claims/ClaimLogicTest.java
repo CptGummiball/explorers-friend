@@ -1,5 +1,6 @@
 package net.explorersfriend.claims;
 
+import com.google.gson.JsonParser;
 import net.explorersfriend.config.MapConfig;
 import net.explorersfriend.overlay.OverlayLayer;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ClaimLogicTest {
 
@@ -126,6 +128,44 @@ class ClaimLogicTest {
         MapClaim claim = layer.queryAll("minecraft_overworld", 10).get(0);
         assertEquals(1, claim.rects().size(), "large region stays one rectangle");
         assertEquals(0x123456, claim.borderArgb() & 0xFFFFFF, "explicit provider color wins");
+    }
+
+    @Test
+    void polygonOnlyClaimIsIndexedAndSerializedWithoutRectangleApproximation() {
+        OverlayLayer<MapClaim> layer = new OverlayLayer<>("claims");
+        List<MapClaim.ClaimPoint> vertices = List.of(
+                new MapClaim.ClaimPoint(-100, 20), new MapClaim.ClaimPoint(5, 20),
+                new MapClaim.ClaimPoint(0, 90));
+        manager(layer).publishRawForTest("test", List.of(new ClaimProvider.RawArea(
+                "poly", "minecraft:overworld", Set.of(), List.of(), List.of(vertices),
+                "Region", null, null, null, false)));
+        MapClaim claim = layer.queryAll("minecraft_overworld", 10).get(0);
+        assertTrue(claim.rects().isEmpty());
+        assertEquals(-100, claim.minX());
+        assertEquals(5, claim.maxX());
+        assertEquals(20, claim.minZ());
+        assertEquals(90, claim.maxZ());
+        assertEquals(1, layer.queryBox("minecraft_overworld", -105, 15, -95, 25, 10).size(),
+                "polygon bounds participate in spatial queries");
+        assertTrue(layer.queryBox("minecraft_overworld", 100, 100, 110, 110, 10).isEmpty());
+        assertEquals(-100, claim.toJson().getAsJsonArray("polygons").get(0)
+                .getAsJsonArray().get(0).getAsJsonArray().get(0).getAsInt());
+    }
+
+    @Test
+    void importAcceptsWorldGuardPointsAndMultipleRings() {
+        var obj = JsonParser.parseString("""
+                {"points":[{"x":0,"z":0},{"x":10,"z":0},{"x":0,"z":10},{"x":0,"z":0}],
+                 "polygons":[[[20,20],[30,20],[20,30]]]}
+                """).getAsJsonObject();
+        var polygons = ClaimImportGeometry.parsePolygons(obj);
+        assertEquals(2, polygons.size());
+        assertEquals(3, polygons.get(0).size(), "duplicate closing point is normalized");
+        assertEquals(new MapClaim.ClaimPoint(20, 20), polygons.get(1).get(0));
+        assertThrows(IllegalArgumentException.class, () -> ClaimImportGeometry.parsePolygons(
+                JsonParser.parseString("{\"points\":[[0,0],[1,1],[2,2]]}").getAsJsonObject()));
+        assertThrows(IllegalArgumentException.class, () -> ClaimImportGeometry.parsePolygons(
+                JsonParser.parseString("{\"points\":[[0,0],[10,0],[0,0]]}").getAsJsonObject()));
     }
 
     @Test

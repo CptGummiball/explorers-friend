@@ -44,6 +44,35 @@ Paper server running GriefPrevention alongside, via an export script) can drop c
 data there; the file is polled cheaply by mtime and hot-reloaded. A dedicated
 GriefPrevention export plugin would be a separate (Paper-side) project.
 
+### Polygon regions in the JSON import
+
+An entry can contain `points` for one polygon outline, or `polygons` for several
+outlines. Coordinates are block X/Z positions, and the last point connects back to
+the first automatically. For example, a WorldGuard polygon export can use:
+
+```jsonc
+[
+  {
+    "id": "spawn", "world": "minecraft:overworld", "name": "Spawn",
+    "color": "#ff8800",
+    "points": [
+      { "x": 2197, "z": 3058 },
+      { "x": 2260, "z": 3122 },
+      { "x": 2375, "z": 3162 },
+      { "x": 2374, "z": 3006 }
+    ]
+  }
+]
+```
+
+The alternative `"polygons": [[[0, 0], [30, 0], [0, 30]], [[50, 50],
+[80, 50], [50, 80]]]` supports multiple separate areas. Each point also accepts
+`{"x": 0, "z": 0}`. Each outline needs at least three distinct points and nonzero
+area. A repeated closing point is accepted and removed. `points`, `polygons`,
+`rects`, and `chunks` may coexist in one entry; they are combined as a union.
+Polygon outlines have no holes. Existing rectangle and chunk imports work as before.
+The claims API emits polygons as arrays of `[x, z]` pairs alongside `rects`.
+
 ## Integration mechanics
 
 - Adapters compile against the official API artifacts (`modCompileOnly`); **nothing is
