@@ -19,6 +19,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+import zlib
 
 TEMP = os.environ.get("TEMP", "/tmp")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -174,17 +175,44 @@ def main():
         checks["renderCommand"] = "started" in out or "queued" in out
         tile_seen = False
         deadline = time.time() + 180
+        render_finished_at = None
         while time.time() < deadline and not tile_seen:
             time.sleep(5)
             import glob as _glob
             tile_seen = bool(_glob.glob(os.path.join(
                 work, "explorersfriend", "tiles", "minecraft_overworld", "0", "*.png")))
+            if "Full render of minecraft_overworld finished" in io.open(
+                    log_path, encoding="utf-8", errors="replace").read():
+                render_finished_at = render_finished_at or time.time()
+                if time.time() - render_finished_at > 10:
+                    break
         checks["tileRendered"] = tile_seen
         if not tile_seen:
             print(f"[smoke] render RCON response: {out!r}")
             for root, dirs, files in os.walk(os.path.join(work, "world")):
                 if root.endswith("region"):
                     print(f"[smoke] region directory: {root} ({len(files)} files)")
+                    for filename in files[:4]:
+                        if not filename.endswith(".mca"):
+                            continue
+                        with open(os.path.join(root, filename), "rb") as region:
+                            header = region.read(4096)
+                            locations = [int.from_bytes(header[i:i + 3], "big")
+                                         for i in range(0, 4096, 4)]
+                            print(f"[smoke] {filename}: {sum(bool(v) for v in locations)} chunk(s)")
+                            if not any(locations):
+                                continue
+                            region.seek(next(v for v in locations if v) * 4096)
+                            length = int.from_bytes(region.read(4), "big")
+                            codec = region.read(1)[0]
+                            data = region.read(length - 1)
+                            if codec == 2:
+                                data = zlib.decompress(data)
+                            print(f"[smoke] first chunk NBT: codec={codec}, prefix={data[:100]!r}")
+                            for key in (b"Status", b"sections", b"xPos", b"block_states"):
+                                offset = data.find(key)
+                                print(f"[smoke] {key.decode()}: {data[offset:offset + 70]!r}")
+                            break
             for root, dirs, files in os.walk(os.path.join(work, "explorersfriend", "tiles")):
                 if files:
                     print(f"[smoke] tile directory: {root} ({len(files)} files)")
